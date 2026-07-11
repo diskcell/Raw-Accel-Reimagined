@@ -12,7 +12,7 @@ Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original
 
 - Interface WPF moderna com tema escuro e gráfico interativo em tempo real.
 - Português do Brasil e inglês em toda a interface.
-- Perfis criáveis e duplicáveis, com associação a dispositivos detectados.
+- Perfis criáveis, duplicáveis, renomeáveis e excluíveis com associação segura a dispositivos detectados.
 - Ajustes de eixos, resposta vertical e suavização com ajuda contextual.
 - Minimização para a bandeja do Windows e desligamento explícito do driver.
 - Modern WPF UI, live graph, device-aware profiles, axis tuning, contextual help and system tray support.

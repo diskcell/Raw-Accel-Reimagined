@@ -87,18 +87,24 @@ namespace RawAccelModern
             { "Profile Management", "Gerenciamento de perfis" },
             { "Create a clean profile or duplicate the selected profile", "Crie um perfil limpo ou duplique o perfil selecionado" },
             { "Create, duplicate or rename the selected profile", "Crie, duplique ou renomeie o perfil selecionado" },
+            { "Create, duplicate, rename or delete profiles safely", "Crie, duplique, renomeie ou exclua perfis com segurança" },
             { "Selected profile", "Perfil selecionado" },
             { "New profile name", "Nome do novo perfil" },
             { "Create Clean Profile", "Criar perfil limpo" },
             { "Duplicate Selected", "Duplicar selecionado" },
             { "Rename Selected", "Renomear selecionado" },
+            { "Replacement profile when deleting", "Perfil substituto ao excluir" },
+            { "Delete Selected", "Excluir selecionado" },
             { "Profile created", "Perfil criado" },
             { "Profile duplicated", "Perfil duplicado" },
             { "Profile renamed", "Perfil renomeado" },
+            { "Profile deleted", "Perfil excluído" },
             { "Profile operation failed", "Falha na operação de perfil" },
             { "Profile name is required.", "O nome do perfil é obrigatório." },
             { "A profile with this name already exists.", "Já existe um perfil com este nome." },
             { "Profile name contains invalid characters.", "O nome do perfil contém caracteres inválidos." },
+            { "The last profile cannot be deleted.", "O último perfil não pode ser excluído." },
+            { "Select a replacement profile before deleting.", "Selecione um perfil substituto antes de excluir." },
             { "Smoothing & Stability", "Suavização e estabilidade" },
             { "Controls acceleration stability and abnormal speed spikes", "Controla a estabilidade da aceleração e picos anormais de velocidade" },
             { "Input Smoothing (ms)", "Suavização de entrada (ms)" },
@@ -231,6 +237,7 @@ namespace RawAccelModern
             { "Connected Devices", "Lists mouse-capable HID interfaces using the original Raw Accel enumerator. Some keyboards also expose a mouse interface; use Not a Mouse to hide them locally. Refresh and ignore do not edit settings.json. Profile association requires confirmation, backup and complete validation." },
             { "Profile Management", "Create Clean Profile adds a new Raw Accel default profile with acceleration disabled. Duplicate Selected copies every value from the selected profile. Rename Selected changes its name and updates every device association that uses it. All actions validate the complete configuration, create a backup and apply it to the driver." },
             { "Rename Selected", "Renames the profile currently selected at the top using the name entered in New profile name. Device associations are updated automatically. The curve values are not changed, and confirmation is required before saving." },
+            { "Delete Selected", "Deletes the profile selected at the top. You must explicitly choose another profile as its replacement. Devices assigned to the deleted profile are moved to that replacement. The last remaining profile cannot be deleted." },
             { "Input Smoothing (ms)", "Smooths the input values used to calculate mouse speed and acceleration. Higher half-life values reduce sensor noise but make acceleration react more slowly. Start between 1 and 3 ms; 0 disables it." },
             { "Sensitivity Smoothing (ms)", "Smooths rapid changes in the acceleration multiplier without directly averaging the final cursor movement. It can make transitions steadier with less latency than output smoothing. Start between 1 and 3 ms; 0 disables it." },
             { "Output Smoothing (ms)", "Averages the final mouse output. This can make movement look smoother, but it adds direct input latency and reduces the immediate connection to the mouse. Keep it at 0 for competitive aiming." },
@@ -262,6 +269,7 @@ namespace RawAccelModern
             { "Connected Devices", "Lista interfaces HID capazes de gerar movimentos de mouse usando o enumerador original do Raw Accel. Alguns teclados também expõem uma interface de mouse; use Não é mouse para ocultá-los localmente. Atualizar e ignorar não editam o settings.json. Associar perfil exige confirmação, backup e validação completa." },
             { "Profile Management", "Criar perfil limpo adiciona um novo perfil padrão do Raw Accel com aceleração desativada. Duplicar selecionado copia todos os valores do perfil escolhido. Renomear selecionado altera o nome e atualiza todas as associações de dispositivos que o utilizam. Todas as ações validam a configuração completa, criam backup e aplicam ao driver." },
             { "Rename Selected", "Renomeia o perfil escolhido no topo usando o texto informado em Nome do novo perfil. As associações de dispositivos são atualizadas automaticamente. Os valores da curva não são alterados e uma confirmação é exigida antes de salvar." },
+            { "Delete Selected", "Exclui o perfil escolhido no topo. Você deve selecionar explicitamente outro perfil como substituto. Dispositivos associados ao perfil excluído são movidos para o substituto. O último perfil restante não pode ser excluído." },
             { "Input Smoothing (ms)", "Suaviza os valores de entrada usados para calcular a velocidade e a aceleração do mouse. Tempos maiores reduzem ruídos do sensor, mas fazem a aceleração reagir mais lentamente. Comece entre 1 e 3 ms; 0 desativa." },
             { "Sensitivity Smoothing (ms)", "Suaviza mudanças rápidas no multiplicador de aceleração sem calcular uma média direta do movimento final. Pode estabilizar as transições com menos latência que a suavização de saída. Comece entre 1 e 3 ms; 0 desativa." },
             { "Output Smoothing (ms)", "Calcula uma média da saída final do mouse. O movimento pode parecer mais suave, mas isso adiciona latência direta e reduz a resposta imediata. Mantenha em 0 para jogos competitivos." },
@@ -815,6 +823,22 @@ namespace RawAccelModern
             if (ManagedProfileSourceText == null) return;
             string selected = ProfileBox == null || ProfileBox.SelectedItem == null ? "—" : ProfileBox.SelectedItem.ToString();
             ManagedProfileSourceText.Text = T("Selected profile") + ": " + selected;
+            if (ReplacementProfileBox == null || settings == null) return;
+            string previousReplacement = ReplacementProfileBox.SelectedItem == null ? null : ReplacementProfileBox.SelectedItem.ToString();
+            ReplacementProfileBox.Items.Clear();
+            JArray profiles = settings["profiles"] as JArray;
+            if (profiles != null)
+            {
+                foreach (JObject profile in profiles.OfType<JObject>())
+                {
+                    string name = profile["name"] == null ? null : profile["name"].ToString();
+                    if (!String.IsNullOrWhiteSpace(name) && !String.Equals(name, selected, StringComparison.Ordinal))
+                        ReplacementProfileBox.Items.Add(name);
+                }
+            }
+            int previousIndex = String.IsNullOrEmpty(previousReplacement) ? -1 : ReplacementProfileBox.Items.IndexOf(previousReplacement);
+            ReplacementProfileBox.SelectedIndex = previousIndex >= 0 ? previousIndex : (ReplacementProfileBox.Items.Count > 0 ? 0 : -1);
+            if (DeleteProfileButton != null) DeleteProfileButton.IsEnabled = ReplacementProfileBox.Items.Count > 0;
         }
 
         private static double GetDouble(JObject obj, string key, double fallback)
@@ -1489,6 +1513,83 @@ namespace RawAccelModern
                 LoadAdvancedSettings();
                 RefreshConnectedDevices();
                 SetAdvancedDriverStatus("Profile renamed", true);
+                DriverStatus.Text = T("Active");
+                DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
+            }
+            catch (Exception ex)
+            {
+                if (backupPath != null && File.Exists(backupPath))
+                {
+                    File.Copy(backupPath, settingsPath, true);
+                    try { RunSettingsWriter(); } catch { }
+                }
+                if (File.Exists(settingsPath)) LoadSettings(previousProfile);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile operation failed", false);
+                MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void DeleteProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string backupPath = null;
+            string previousProfile = ProfileBox.SelectedItem == null ? null : ProfileBox.SelectedItem.ToString();
+            try
+            {
+                JObject edited = JObject.Parse(File.ReadAllText(settingsPath));
+                JArray profiles = edited["profiles"] as JArray;
+                int index = ProfileBox.SelectedIndex;
+                if (profiles == null || index < 0 || index >= profiles.Count)
+                    throw new InvalidDataException(T("The selected profile was not found."));
+                if (profiles.Count <= 1) throw new InvalidDataException(T("The last profile cannot be deleted."));
+
+                JObject selectedProfile = profiles[index] as JObject;
+                string deletedName = selectedProfile == null || selectedProfile["name"] == null ? null : selectedProfile["name"].ToString();
+                string replacementName = ReplacementProfileBox.SelectedItem == null ? null : ReplacementProfileBox.SelectedItem.ToString();
+                if (String.IsNullOrWhiteSpace(deletedName)) throw new InvalidDataException(T("The selected profile was not found."));
+                if (String.IsNullOrWhiteSpace(replacementName) || String.Equals(deletedName, replacementName, StringComparison.Ordinal))
+                    throw new InvalidDataException(T("Select a replacement profile before deleting."));
+                bool replacementExists = profiles.OfType<JObject>().Any(profile => profile["name"] != null &&
+                    String.Equals(profile["name"].ToString(), replacementName, StringComparison.Ordinal));
+                if (!replacementExists) throw new InvalidDataException(T("Select a replacement profile before deleting."));
+
+                JArray devices = edited["devices"] as JArray;
+                List<JObject> associatedDevices = devices == null
+                    ? new List<JObject>()
+                    : devices.OfType<JObject>().Where(device => device["profile"] != null &&
+                        String.Equals(device["profile"].ToString(), deletedName, StringComparison.Ordinal)).ToList();
+                string associationNote = associatedDevices.Count == 0
+                    ? String.Empty
+                    : (currentLanguage == "pt-BR"
+                        ? "\n\n" + associatedDevices.Count + " associação(ões) de dispositivo será(ão) movida(s) para \"" + replacementName + "\"."
+                        : "\n\n" + associatedDevices.Count + " device association(s) will be moved to \"" + replacementName + "\".");
+                string confirmation = currentLanguage == "pt-BR"
+                    ? "Excluir permanentemente o perfil \"" + deletedName + "\"?\n\nPerfil substituto: \"" + replacementName + "\"." + associationNote
+                    : "Permanently delete profile \"" + deletedName + "\"?\n\nReplacement profile: \"" + replacementName + "\"." + associationNote;
+                if (MessageBox.Show(this, confirmation, T("Profile Management"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    return;
+
+                foreach (JObject device in associatedDevices) device["profile"] = replacementName;
+                selectedProfile.Remove();
+
+                Tuple<DriverConfig, string> validation = DriverConfig.Convert(edited.ToString(Formatting.None));
+                if (validation == null || validation.Item1 == null)
+                    throw new InvalidDataException(T("The original engine rejected the configuration.") + " " + (validation == null ? String.Empty : validation.Item2));
+
+                string backupDirectory = IOPath.Combine(rootDirectory, "backups", "modern-ui");
+                Directory.CreateDirectory(backupDirectory);
+                backupPath = IOPath.Combine(backupDirectory, "profile-delete-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + ".json");
+                File.Copy(settingsPath, backupPath, false);
+                File.WriteAllText(settingsPath, edited.ToString(Formatting.Indented));
+                int exitCode = RunSettingsWriter();
+                if (exitCode != 0) throw new InvalidOperationException("writer.exe returned code " + exitCode + ".");
+
+                NewProfileNameBox.Clear();
+                LoadSettings(replacementName);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile deleted", true);
                 DriverStatus.Text = T("Active");
                 DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
             }
