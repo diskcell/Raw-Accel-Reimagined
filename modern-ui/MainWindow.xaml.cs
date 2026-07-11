@@ -98,12 +98,18 @@ namespace RawAccelModern
             { "Replacement profile when deleting", "Perfil substituto ao excluir" },
             { "Delete Selected", "Excluir selecionado" },
             { "Export Selected", "Exportar selecionado" },
+            { "Import Profile", "Importar perfil" },
             { "Profile created", "Perfil criado" },
             { "Profile duplicated", "Perfil duplicado" },
             { "Profile renamed", "Perfil renomeado" },
             { "Profile deleted", "Perfil excluído" },
             { "Profile exported", "Perfil exportado" },
             { "Profile export failed", "Falha ao exportar perfil" },
+            { "Profile imported", "Perfil importado" },
+            { "Profile import failed", "Falha ao importar perfil" },
+            { "Unsupported profile file.", "Arquivo de perfil não compatível." },
+            { "The imported profile is missing or invalid.", "O perfil importado está ausente ou é inválido." },
+            { "This profile name already exists. Enter a different name in New profile name and import again.", "Este nome de perfil já existe. Informe outro nome em Nome do novo perfil e importe novamente." },
             { "Profile operation failed", "Falha na operação de perfil" },
             { "Profile name is required.", "O nome do perfil é obrigatório." },
             { "A profile with this name already exists.", "Já existe um perfil com este nome." },
@@ -240,10 +246,11 @@ namespace RawAccelModern
         private static readonly Dictionary<string, string> HelpTextEnglish = new Dictionary<string, string>
         {
             { "Connected Devices", "Lists mouse-capable HID interfaces using the original Raw Accel enumerator. Some keyboards also expose a mouse interface; use Not a Mouse to hide them locally. Refresh and ignore do not edit settings.json. Profile association requires confirmation, backup and complete validation." },
-            { "Profile Management", "Create Clean Profile adds a new Raw Accel default profile with acceleration disabled. Duplicate Selected copies every value from the selected profile. Rename Selected changes its name and updates every device association that uses it. All actions validate the complete configuration, create a backup and apply it to the driver." },
+            { "Profile Management", "Create, duplicate, rename and delete profiles with complete validation and backups. Deleting requires a replacement profile for device associations. Export and import transfer only profile values and never include device IDs or local preferences." },
             { "Rename Selected", "Renames the profile currently selected at the top using the name entered in New profile name. Device associations are updated automatically. The curve values are not changed, and confirmation is required before saving." },
             { "Delete Selected", "Deletes the profile selected at the top. You must explicitly choose another profile as its replacement. Devices assigned to the deleted profile are moved to that replacement. The last remaining profile cannot be deleted." },
             { "Export Selected", "Saves only the selected profile in a portable Raw Accel Reimagined file. Device IDs, device associations and local preferences are never included. Exporting does not change settings.json or the driver." },
+            { "Import Profile", "Loads a Raw Accel Reimagined profile file after complete validation. If its name already exists, enter a different name in New profile name before importing. Import creates a backup, never imports device IDs and requires confirmation before applying to the driver." },
             { "Input Smoothing (ms)", "Smooths the input values used to calculate mouse speed and acceleration. Higher half-life values reduce sensor noise but make acceleration react more slowly. Start between 1 and 3 ms; 0 disables it." },
             { "Sensitivity Smoothing (ms)", "Smooths rapid changes in the acceleration multiplier without directly averaging the final cursor movement. It can make transitions steadier with less latency than output smoothing. Start between 1 and 3 ms; 0 disables it." },
             { "Output Smoothing (ms)", "Averages the final mouse output. This can make movement look smoother, but it adds direct input latency and reduces the immediate connection to the mouse. Keep it at 0 for competitive aiming." },
@@ -273,10 +280,11 @@ namespace RawAccelModern
         private static readonly Dictionary<string, string> HelpTextPortuguese = new Dictionary<string, string>
         {
             { "Connected Devices", "Lista interfaces HID capazes de gerar movimentos de mouse usando o enumerador original do Raw Accel. Alguns teclados também expõem uma interface de mouse; use Não é mouse para ocultá-los localmente. Atualizar e ignorar não editam o settings.json. Associar perfil exige confirmação, backup e validação completa." },
-            { "Profile Management", "Criar perfil limpo adiciona um novo perfil padrão do Raw Accel com aceleração desativada. Duplicar selecionado copia todos os valores do perfil escolhido. Renomear selecionado altera o nome e atualiza todas as associações de dispositivos que o utilizam. Todas as ações validam a configuração completa, criam backup e aplicam ao driver." },
+            { "Profile Management", "Crie, duplique, renomeie e exclua perfis com validação completa e backups. Excluir exige um perfil substituto para as associações de dispositivos. Exportar e importar transferem somente os valores do perfil, sem IDs de dispositivos ou preferências locais." },
             { "Rename Selected", "Renomeia o perfil escolhido no topo usando o texto informado em Nome do novo perfil. As associações de dispositivos são atualizadas automaticamente. Os valores da curva não são alterados e uma confirmação é exigida antes de salvar." },
             { "Delete Selected", "Exclui o perfil escolhido no topo. Você deve selecionar explicitamente outro perfil como substituto. Dispositivos associados ao perfil excluído são movidos para o substituto. O último perfil restante não pode ser excluído." },
             { "Export Selected", "Salva somente o perfil selecionado em um arquivo portátil do Raw Accel Reimagined. IDs e associações de dispositivos e preferências locais nunca são incluídos. Exportar não altera o settings.json nem o driver." },
+            { "Import Profile", "Carrega um arquivo de perfil do Raw Accel Reimagined após validação completa. Se o nome já existir, informe outro nome em Nome do novo perfil antes de importar. A importação cria backup, nunca importa IDs de dispositivos e exige confirmação antes de aplicar ao driver." },
             { "Input Smoothing (ms)", "Suaviza os valores de entrada usados para calcular a velocidade e a aceleração do mouse. Tempos maiores reduzem ruídos do sensor, mas fazem a aceleração reagir mais lentamente. Comece entre 1 e 3 ms; 0 desativa." },
             { "Sensitivity Smoothing (ms)", "Suaviza mudanças rápidas no multiplicador de aceleração sem calcular uma média direta do movimento final. Pode estabilizar as transições com menos latência que a suavização de saída. Comece entre 1 e 3 ms; 0 desativa." },
             { "Output Smoothing (ms)", "Calcula uma média da saída final do mouse. O movimento pode parecer mais suave, mas isso adiciona latência direta e reduz a resposta imediata. Mantenha em 0 para jogos competitivos." },
@@ -1655,6 +1663,101 @@ namespace RawAccelModern
             catch (Exception ex)
             {
                 SetAdvancedDriverStatus("Profile export failed", false);
+                MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ImportProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string backupPath = null;
+            string previousProfile = ProfileBox.SelectedItem == null ? null : ProfileBox.SelectedItem.ToString();
+            try
+            {
+                OpenFileDialog dialog = new OpenFileDialog
+                {
+                    Title = T("Import Profile"),
+                    Filter = "Raw Accel Reimagined Profile (*.rawaccel-profile.json)|*.rawaccel-profile.json|JSON (*.json)|*.json",
+                    DefaultExt = ".rawaccel-profile.json",
+                    CheckFileExists = true,
+                    Multiselect = false
+                };
+                if (dialog.ShowDialog(this) != true) return;
+                FileInfo importedInfo = new FileInfo(dialog.FileName);
+                if (!importedInfo.Exists || importedInfo.Length <= 0 || importedInfo.Length > 2 * 1024 * 1024)
+                    throw new InvalidDataException(T("Unsupported profile file."));
+
+                JObject importedFile = JObject.Parse(File.ReadAllText(dialog.FileName));
+                int formatVersion;
+                if (importedFile["format"] == null || importedFile["format"].ToString() != "RawAccelReimagined.Profile" ||
+                    importedFile["formatVersion"] == null || !Int32.TryParse(importedFile["formatVersion"].ToString(), out formatVersion) || formatVersion != 1)
+                    throw new InvalidDataException(T("Unsupported profile file."));
+                JObject importedProfile = importedFile["profile"] as JObject;
+                if (importedProfile == null || importedProfile["name"] == null)
+                    throw new InvalidDataException(T("The imported profile is missing or invalid."));
+
+                JObject edited = JObject.Parse(File.ReadAllText(settingsPath));
+                JArray profiles = edited["profiles"] as JArray;
+                if (profiles == null || profiles.Count == 0)
+                    throw new InvalidDataException(T("No profiles were found in settings.json."));
+                string originalName = ValidateNewProfileName(importedProfile["name"].ToString());
+                bool duplicateName = profiles.OfType<JObject>().Any(profile => profile["name"] != null &&
+                    String.Equals(profile["name"].ToString(), originalName, StringComparison.OrdinalIgnoreCase));
+                string targetName = originalName;
+                if (duplicateName)
+                {
+                    if (String.IsNullOrWhiteSpace(NewProfileNameBox.Text))
+                        throw new InvalidDataException(T("This profile name already exists. Enter a different name in New profile name and import again."));
+                    targetName = ValidateNewProfileName(NewProfileNameBox.Text);
+                    if (profiles.OfType<JObject>().Any(profile => profile["name"] != null &&
+                        String.Equals(profile["name"].ToString(), targetName, StringComparison.OrdinalIgnoreCase)))
+                        throw new InvalidDataException(T("A profile with this name already exists."));
+                }
+
+                JObject profileToAdd = (JObject)importedProfile.DeepClone();
+                profileToAdd["name"] = targetName;
+                profiles.Add(profileToAdd);
+
+                Tuple<DriverConfig, string> validation = DriverConfig.Convert(edited.ToString(Formatting.None));
+                if (validation == null || validation.Item1 == null)
+                    throw new InvalidDataException(T("The original engine rejected the configuration.") + " " + (validation == null ? String.Empty : validation.Item2));
+
+                string sourceVersion = importedFile["rawAccelVersion"] == null ? "unknown" : importedFile["rawAccelVersion"].ToString();
+                string renameNote = String.Equals(originalName, targetName, StringComparison.Ordinal)
+                    ? String.Empty
+                    : (currentLanguage == "pt-BR" ? "\nNome no arquivo: \"" + originalName + "\"." : "\nName in file: \"" + originalName + "\".");
+                string confirmation = currentLanguage == "pt-BR"
+                    ? "Importar o perfil \"" + targetName + "\"?\nVersão Raw Accel do arquivo: " + sourceVersion + "." + renameNote + "\n\nNenhum dispositivo será importado."
+                    : "Import profile \"" + targetName + "\"?\nRaw Accel version in file: " + sourceVersion + "." + renameNote + "\n\nNo devices will be imported.";
+                if (MessageBox.Show(this, confirmation, T("Profile Management"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
+
+                string backupDirectory = IOPath.Combine(rootDirectory, "backups", "modern-ui");
+                Directory.CreateDirectory(backupDirectory);
+                backupPath = IOPath.Combine(backupDirectory, "profile-import-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + ".json");
+                File.Copy(settingsPath, backupPath, false);
+                File.WriteAllText(settingsPath, edited.ToString(Formatting.Indented));
+                int exitCode = RunSettingsWriter();
+                if (exitCode != 0) throw new InvalidOperationException("writer.exe returned code " + exitCode + ".");
+
+                NewProfileNameBox.Clear();
+                LoadSettings(targetName);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile imported", true);
+                DriverStatus.Text = T("Active");
+                DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
+            }
+            catch (Exception ex)
+            {
+                if (backupPath != null && File.Exists(backupPath))
+                {
+                    File.Copy(backupPath, settingsPath, true);
+                    try { RunSettingsWriter(); } catch { }
+                }
+                if (File.Exists(settingsPath)) LoadSettings(previousProfile);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile import failed", false);
                 MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

@@ -396,6 +396,10 @@
               <Button x:Name="ExportProfileButton" Grid.Column="0" Height="43" Style="{StaticResource AccentButton}" Content="Export Selected" Click="ExportProfile_Click" />
               <Button Grid.Column="1" Style="{StaticResource InfoButton}" Tag="Export Selected" Margin="8,0,0,0"/>
             </Grid>
+            <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+              <Button x:Name="ImportProfileButton" Grid.Column="0" Height="43" Style="{StaticResource ModernButton}" Content="Import Profile" Click="ImportProfile_Click" />
+              <Button Grid.Column="1" Style="{StaticResource InfoButton}" Tag="Import Profile" Margin="8,0,0,0"/>
+            </Grid>
           </StackPanel>
         </Border>
         </StackPanel>
