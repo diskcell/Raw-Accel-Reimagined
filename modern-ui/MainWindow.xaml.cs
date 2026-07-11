@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using IOPath = System.IO.Path;
@@ -88,6 +89,7 @@ namespace RawAccelModern
             { "Create a clean profile or duplicate the selected profile", "Crie um perfil limpo ou duplique o perfil selecionado" },
             { "Create, duplicate or rename the selected profile", "Crie, duplique ou renomeie o perfil selecionado" },
             { "Create, duplicate, rename or delete profiles safely", "Crie, duplique, renomeie ou exclua perfis com segurança" },
+            { "Manage and transfer profiles safely", "Gerencie e transfira perfis com segurança" },
             { "Selected profile", "Perfil selecionado" },
             { "New profile name", "Nome do novo perfil" },
             { "Create Clean Profile", "Criar perfil limpo" },
@@ -95,10 +97,13 @@ namespace RawAccelModern
             { "Rename Selected", "Renomear selecionado" },
             { "Replacement profile when deleting", "Perfil substituto ao excluir" },
             { "Delete Selected", "Excluir selecionado" },
+            { "Export Selected", "Exportar selecionado" },
             { "Profile created", "Perfil criado" },
             { "Profile duplicated", "Perfil duplicado" },
             { "Profile renamed", "Perfil renomeado" },
             { "Profile deleted", "Perfil excluído" },
+            { "Profile exported", "Perfil exportado" },
+            { "Profile export failed", "Falha ao exportar perfil" },
             { "Profile operation failed", "Falha na operação de perfil" },
             { "Profile name is required.", "O nome do perfil é obrigatório." },
             { "A profile with this name already exists.", "Já existe um perfil com este nome." },
@@ -238,6 +243,7 @@ namespace RawAccelModern
             { "Profile Management", "Create Clean Profile adds a new Raw Accel default profile with acceleration disabled. Duplicate Selected copies every value from the selected profile. Rename Selected changes its name and updates every device association that uses it. All actions validate the complete configuration, create a backup and apply it to the driver." },
             { "Rename Selected", "Renames the profile currently selected at the top using the name entered in New profile name. Device associations are updated automatically. The curve values are not changed, and confirmation is required before saving." },
             { "Delete Selected", "Deletes the profile selected at the top. You must explicitly choose another profile as its replacement. Devices assigned to the deleted profile are moved to that replacement. The last remaining profile cannot be deleted." },
+            { "Export Selected", "Saves only the selected profile in a portable Raw Accel Reimagined file. Device IDs, device associations and local preferences are never included. Exporting does not change settings.json or the driver." },
             { "Input Smoothing (ms)", "Smooths the input values used to calculate mouse speed and acceleration. Higher half-life values reduce sensor noise but make acceleration react more slowly. Start between 1 and 3 ms; 0 disables it." },
             { "Sensitivity Smoothing (ms)", "Smooths rapid changes in the acceleration multiplier without directly averaging the final cursor movement. It can make transitions steadier with less latency than output smoothing. Start between 1 and 3 ms; 0 disables it." },
             { "Output Smoothing (ms)", "Averages the final mouse output. This can make movement look smoother, but it adds direct input latency and reduces the immediate connection to the mouse. Keep it at 0 for competitive aiming." },
@@ -270,6 +276,7 @@ namespace RawAccelModern
             { "Profile Management", "Criar perfil limpo adiciona um novo perfil padrão do Raw Accel com aceleração desativada. Duplicar selecionado copia todos os valores do perfil escolhido. Renomear selecionado altera o nome e atualiza todas as associações de dispositivos que o utilizam. Todas as ações validam a configuração completa, criam backup e aplicam ao driver." },
             { "Rename Selected", "Renomeia o perfil escolhido no topo usando o texto informado em Nome do novo perfil. As associações de dispositivos são atualizadas automaticamente. Os valores da curva não são alterados e uma confirmação é exigida antes de salvar." },
             { "Delete Selected", "Exclui o perfil escolhido no topo. Você deve selecionar explicitamente outro perfil como substituto. Dispositivos associados ao perfil excluído são movidos para o substituto. O último perfil restante não pode ser excluído." },
+            { "Export Selected", "Salva somente o perfil selecionado em um arquivo portátil do Raw Accel Reimagined. IDs e associações de dispositivos e preferências locais nunca são incluídos. Exportar não altera o settings.json nem o driver." },
             { "Input Smoothing (ms)", "Suaviza os valores de entrada usados para calcular a velocidade e a aceleração do mouse. Tempos maiores reduzem ruídos do sensor, mas fazem a aceleração reagir mais lentamente. Comece entre 1 e 3 ms; 0 desativa." },
             { "Sensitivity Smoothing (ms)", "Suaviza mudanças rápidas no multiplicador de aceleração sem calcular uma média direta do movimento final. Pode estabilizar as transições com menos latência que a suavização de saída. Comece entre 1 e 3 ms; 0 desativa." },
             { "Output Smoothing (ms)", "Calcula uma média da saída final do mouse. O movimento pode parecer mais suave, mas isso adiciona latência direta e reduz a resposta imediata. Mantenha em 0 para jogos competitivos." },
@@ -1606,6 +1613,58 @@ namespace RawAccelModern
                 SetAdvancedDriverStatus("Profile operation failed", false);
                 MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private void ExportProfile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                JArray profiles = settings == null ? null : settings["profiles"] as JArray;
+                int index = ProfileBox.SelectedIndex;
+                if (profiles == null || index < 0 || index >= profiles.Count)
+                    throw new InvalidDataException(T("The selected profile was not found."));
+                JObject selectedProfile = profiles[index] as JObject;
+                if (selectedProfile == null || selectedProfile["name"] == null)
+                    throw new InvalidDataException(T("The selected profile was not found."));
+
+                string profileName = selectedProfile["name"].ToString();
+                SaveFileDialog dialog = new SaveFileDialog
+                {
+                    Title = T("Export Selected"),
+                    Filter = "Raw Accel Reimagined Profile (*.rawaccel-profile.json)|*.rawaccel-profile.json|JSON (*.json)|*.json",
+                    DefaultExt = ".rawaccel-profile.json",
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    FileName = MakeSafeFileName(profileName) + ".rawaccel-profile.json"
+                };
+                if (dialog.ShowDialog(this) != true) return;
+
+                JObject exported = new JObject();
+                exported["format"] = "RawAccelReimagined.Profile";
+                exported["formatVersion"] = 1;
+                exported["rawAccelVersion"] = settings["version"] == null ? "unknown" : settings["version"].ToString();
+                exported["exportedAtUtc"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+                exported["profile"] = selectedProfile.DeepClone();
+                File.WriteAllText(dialog.FileName, exported.ToString(Formatting.Indented));
+                SetAdvancedDriverStatus("Profile exported", true);
+                string message = currentLanguage == "pt-BR"
+                    ? "Perfil \"" + profileName + "\" exportado para:\n" + dialog.FileName
+                    : "Profile \"" + profileName + "\" exported to:\n" + dialog.FileName;
+                MessageBox.Show(this, message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                SetAdvancedDriverStatus("Profile export failed", false);
+                MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private static string MakeSafeFileName(string value)
+        {
+            string safe = String.IsNullOrWhiteSpace(value) ? "profile" : value.Trim();
+            foreach (char invalid in IOPath.GetInvalidFileNameChars()) safe = safe.Replace(invalid, '-');
+            safe = safe.Trim(' ', '.');
+            return safe.Length == 0 ? "profile" : safe;
         }
 
         private void CreateOrDuplicateProfile(bool duplicateSelected)
