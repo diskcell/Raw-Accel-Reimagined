@@ -14,6 +14,7 @@ Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original
 - Português do Brasil e inglês em toda a interface.
 - Perfis criáveis, duplicáveis, renomeáveis, excluíveis, exportáveis e importáveis com associação segura a dispositivos detectados.
 - Ajustes de eixos, resposta vertical e suavização com ajuda contextual.
+- Editor dedicado para Natural, com preservação segura dos parâmetros dos demais tipos de curva.
 - Minimização para a bandeja do Windows e desligamento explícito do driver.
 - Modern WPF UI, live graph, device-aware profiles, axis tuning, contextual help and system tray support.
 

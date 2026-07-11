@@ -249,12 +249,16 @@
             <Border Style="{StaticResource Card}">
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><TextBlock Text="Curve / Profile" Foreground="#AAB7CA"/><Button Style="{StaticResource InfoButton}" Tag="Curve / Profile"/></StackPanel>
-                <ComboBox x:Name="ModeBox" Height="42"><ComboBoxItem Content="Natural" Tag="natural"/><ComboBoxItem Content="Classic" Tag="classic"/><ComboBoxItem Content="Jump" Tag="jump"/><ComboBoxItem Content="Synchronous" Tag="synchronous"/><ComboBoxItem Content="Power" Tag="power"/><ComboBoxItem Content="LUT" Tag="lut"/><ComboBoxItem Content="No Accel" Tag="noaccel"/></ComboBox>
+                <ComboBox x:Name="ModeBox" Height="42" SelectionChanged="ModeBox_SelectionChanged"><ComboBoxItem Content="Natural" Tag="natural"/><ComboBoxItem Content="Classic" Tag="classic"/><ComboBoxItem Content="Jump" Tag="jump"/><ComboBoxItem Content="Synchronous" Tag="synchronous"/><ComboBoxItem Content="Power" Tag="power"/><ComboBoxItem Content="LUT" Tag="lut"/><ComboBoxItem Content="No Accel" Tag="noaccel"/></ComboBox>
               </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <Border x:Name="CurveParametersCard" Style="{StaticResource Card}">
               <StackPanel>
+                <StackPanel Margin="0,0,0,12">
+                  <TextBlock x:Name="CurveParameterTitle" Text="Natural Curve Parameters" FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock x:Name="CurveParameterDescription" Text="Smooth progressive curve with a configurable start, rise and ceiling" TextWrapping="Wrap" Foreground="#718198" FontSize="11" Margin="0,3,0,0" />
+                </StackPanel>
                 <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
                   <StackPanel Orientation="Horizontal"><TextBlock Text="Gain" FontSize="16" FontWeight="SemiBold"/><Button Style="{StaticResource InfoButton}" Tag="Gain"/></StackPanel>
                   <CheckBox x:Name="GainToggle" Grid.Column="1" Content=" ON" Foreground="#E7EDF6" VerticalAlignment="Center"/>
@@ -271,6 +275,13 @@
                   <TextBlock Text="◴  Limit" Style="{StaticResource FieldLabel}"/><TextBox x:Name="LimitBox" Grid.Column="1"/><TextBlock x:Name="LimitCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
                   <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Limit" HorizontalAlignment="Right" Margin="0,0,8,0"/>
                 </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="CurveModeNotice" Style="{StaticResource Card}" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock x:Name="CurveModeNoticeTitle" Text="Mode-specific editor pending" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock x:Name="CurveModeNoticeText" Text="Existing parameters are preserved when applying. A dedicated editor will be added in a separate tested stage." TextWrapping="Wrap" Foreground="#8FA0B8" Margin="0,6,0,0" />
               </StackPanel>
             </Border>
 

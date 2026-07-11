@@ -161,6 +161,12 @@ namespace RawAccelModern
             { "Rotation", "Rotação" },
             { "Curve / Profile", "Curva / Perfil" },
             { "Natural", "Natural" },
+            { "Natural Curve Parameters", "Parâmetros da curva Natural" },
+            { "Smooth progressive curve with a configurable start, rise and ceiling", "Curva progressiva suave com início, subida e limite configuráveis" },
+            { "Mode-specific editor pending", "Editor específico do modo pendente" },
+            { "Existing parameters are preserved when applying. A dedicated editor will be added in a separate tested stage.", "Os parâmetros existentes são preservados ao aplicar. Um editor dedicado será adicionado em uma etapa separada e testada." },
+            { "No acceleration parameters", "Sem parâmetros de aceleração" },
+            { "No Accel uses only the base sensitivity and directional settings. Curve parameters are not applied.", "Sem aceleração usa somente a sensibilidade base e os ajustes direcionais. Parâmetros de curva não são aplicados." },
             { "Classic", "Clássico" },
             { "Jump", "Salto" },
             { "Synchronous", "Síncrono" },
@@ -258,7 +264,7 @@ namespace RawAccelModern
             { "Sens Multiplier", "Multiplies the final mouse output at every speed. 1.00 keeps the base sensitivity; 1.20 makes all movement about 20% faster." },
             { "Y / X Ratio", "Changes vertical sensitivity relative to horizontal sensitivity, equally for up and down. 1.05 makes vertical output about 5% faster." },
             { "Rotation", "Rotates the reference axes used by horizontal, vertical and directional adjustments. Keep it at 0 unless your natural mouse movement is tilted." },
-            { "Curve / Profile", "Selects the mathematical acceleration curve. Natural is smooth and progressive; the other modes produce different curve shapes and may use parameters differently." },
+            { "Curve / Profile", "Selects the mathematical acceleration curve. Natural now has a dedicated editor for Decay Rate, Input Offset and Limit. No Accel hides curve parameters. Other modes preserve their stored parameters until their dedicated editors are implemented." },
             { "Gain", "When enabled, the selected shape is applied as gain—the rate at which output velocity changes—instead of directly as sensitivity. This can significantly change the feel of the same curve." },
             { "Decay Rate", "Controls how quickly the Natural curve rises toward its limit after acceleration begins. Higher values make the transition happen sooner and more aggressively." },
             { "Input Offset", "Sets the input speed threshold before acceleration begins. Below this speed, movement stays close to the base sensitivity." },
@@ -292,7 +298,7 @@ namespace RawAccelModern
             { "Sens Multiplier", "Multiplica a saída final do mouse em qualquer velocidade. 1,00 mantém a sensibilidade base; 1,20 deixa todos os movimentos aproximadamente 20% mais rápidos." },
             { "Y / X Ratio", "Altera a sensibilidade vertical em relação à horizontal, igualmente para cima e para baixo. 1,05 deixa a saída vertical aproximadamente 5% mais rápida." },
             { "Rotation", "Gira os eixos de referência usados nos ajustes horizontais, verticais e direcionais. Mantenha em 0, exceto se o movimento natural da sua mão for inclinado." },
-            { "Curve / Profile", "Seleciona a curva matemática de aceleração. Natural é suave e progressiva; os outros modos produzem formatos diferentes e podem interpretar os parâmetros de outra maneira." },
+            { "Curve / Profile", "Seleciona a curva matemática de aceleração. Natural agora possui um editor dedicado para Taxa de decaimento, Deslocamento de entrada e Limite. Sem aceleração oculta os parâmetros da curva. Os outros modos preservam seus parâmetros até receberem editores dedicados." },
             { "Gain", "Quando ativado, o formato selecionado é aplicado como ganho — a taxa de mudança da velocidade de saída — em vez de ser aplicado diretamente como sensibilidade. Isso pode mudar bastante a sensação da mesma curva." },
             { "Decay Rate", "Controla a rapidez com que a curva Natural sobe em direção ao limite após o início da aceleração. Valores maiores tornam a transição mais rápida e agressiva." },
             { "Input Offset", "Define a velocidade de entrada necessária para a aceleração começar. Abaixo dessa velocidade, o movimento permanece próximo da sensibilidade base." },
@@ -469,6 +475,7 @@ namespace RawAccelModern
             if (trayOpenItem != null) trayOpenItem.Text = currentLanguage == "pt-BR" ? "Abrir" : "Open";
             if (trayExitItem != null) trayExitItem.Text = currentLanguage == "pt-BR" ? "Fechar (desativar aceleração)" : "Close (disable acceleration)";
             DrawChart();
+            UpdateCurveEditor();
             UpdateManagedProfileSource();
             if (IsLoaded && settings != null && DetectedDevicesPanel != null) RefreshConnectedDevices();
         }
@@ -827,6 +834,7 @@ namespace RawAccelModern
 
             string mode = accel == null || accel["mode"] == null ? "natural" : accel["mode"].ToString();
             SelectMode(mode);
+            UpdateCurveEditor();
             StatRatio.Text = ratio.ToString("0.00", CultureInfo.InvariantCulture);
             StatDpi.Text = displayDpi.ToString(CultureInfo.InvariantCulture);
             UpdateManagedProfileSource();
@@ -896,6 +904,40 @@ namespace RawAccelModern
             if (item == null) return "natural";
             string value = Convert.ToString(item.Tag);
             return String.IsNullOrEmpty(value) ? "natural" : value;
+        }
+
+        private void ModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateCurveEditor();
+            if (!loading && settings != null && IsLoaded) DrawChart();
+        }
+
+        private void UpdateCurveEditor()
+        {
+            if (CurveParametersCard == null || CurveModeNotice == null || ModeBox == null) return;
+            string mode = SelectedMode();
+            if (String.Equals(mode, "natural", StringComparison.OrdinalIgnoreCase))
+            {
+                CurveParametersCard.Visibility = Visibility.Visible;
+                CurveModeNotice.Visibility = Visibility.Collapsed;
+                CurveParameterTitle.Text = T("Natural Curve Parameters");
+                CurveParameterDescription.Text = T("Smooth progressive curve with a configurable start, rise and ceiling");
+                return;
+            }
+
+            CurveParametersCard.Visibility = Visibility.Collapsed;
+            CurveModeNotice.Visibility = Visibility.Visible;
+            if (String.Equals(mode, "noaccel", StringComparison.OrdinalIgnoreCase))
+            {
+                CurveModeNoticeTitle.Text = T("No acceleration parameters");
+                CurveModeNoticeText.Text = T("No Accel uses only the base sensitivity and directional settings. Curve parameters are not applied.");
+                return;
+            }
+
+            ComboBoxItem item = ModeBox.SelectedItem as ComboBoxItem;
+            string displayName = item == null ? mode : Convert.ToString(item.Content);
+            CurveModeNoticeTitle.Text = T("Mode-specific editor pending") + ": " + displayName;
+            CurveModeNoticeText.Text = T("Existing parameters are preserved when applying. A dedicated editor will be added in a separate tested stage.");
         }
 
         private double ReadNumber(TextBox box, string label)
@@ -2082,11 +2124,15 @@ namespace RawAccelModern
             profile["Output DPI"] = ReadNumber(SensBox, "Sens Multiplier") * 1000.0;
             profile["Y/X output DPI ratio (vertical sens multiplier)"] = ReadNumber(RatioBox, "Y / X Ratio");
             profile["Degrees of rotation"] = ReadNumber(RotationBox, "Rotation");
-            accel["mode"] = SelectedMode();
-            accel["Gain / Velocity"] = GainToggle.IsChecked == true;
-            accel["decayRate"] = ReadNumber(DecayBox, "Decay Rate");
-            accel["inputOffset"] = ReadNumber(OffsetBox, "Input Offset");
-            accel["limit"] = ReadNumber(LimitBox, "Limit");
+            string selectedMode = SelectedMode();
+            accel["mode"] = selectedMode;
+            if (String.Equals(selectedMode, "natural", StringComparison.OrdinalIgnoreCase))
+            {
+                accel["Gain / Velocity"] = GainToggle.IsChecked == true;
+                accel["decayRate"] = ReadNumber(DecayBox, "Decay Rate");
+                accel["inputOffset"] = ReadNumber(OffsetBox, "Input Offset");
+                accel["limit"] = ReadNumber(LimitBox, "Limit");
+            }
             if (domain != null) domain["y"] = ReadNumber(AnisotropyBox, "Anisotropy");
             if (range != null) range["y"] = ReadNumber(VerticalRangeBox, "Vertical Accel Strength");
             return edited;
