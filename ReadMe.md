@@ -23,7 +23,7 @@ Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original
 2. Instale o driver com `installer.exe` se ele ainda não estiver instalado.
 3. Abra `RawAccelReimagined.exe`.
 
-Seu `settings.json`, preferências locais e IDs de dispositivos não são versionados. Isso impede que perfis pessoais sejam publicados acidentalmente.
+Seu `settings.json`, `.config`, `.reimagined.config`, preferências locais e IDs de dispositivos não são versionados. Isso impede que perfis pessoais sejam publicados acidentalmente.
 
 Copy `settings.example.json` to `settings.json`, install the driver if needed, then run `RawAccelReimagined.exe`. Local settings and hardware IDs are intentionally excluded from Git.
 

@@ -1,5 +1,6 @@
 # Local user state and hardware associations
 .config
+.reimagined.config
 settings.json
 
 # Local development notes and backups

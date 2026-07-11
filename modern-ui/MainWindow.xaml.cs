@@ -481,10 +481,7 @@ namespace RawAccelModern
             string language = Convert.ToString(item.Tag);
             if (String.IsNullOrEmpty(language) || language == currentLanguage) return;
             currentLanguage = language;
-            string path = IOPath.Combine(rootDirectory, ".config");
-            JObject gui = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
-            gui["Language"] = currentLanguage;
-            File.WriteAllText(path, gui.ToString(Formatting.None));
+            SaveReimaginedPreferences();
             ApplyLanguage();
         }
 
@@ -726,16 +723,23 @@ namespace RawAccelModern
         private void LoadGuiPreferences()
         {
             string path = IOPath.Combine(rootDirectory, ".config");
-            if (!File.Exists(path)) return;
-            JObject gui = JObject.Parse(File.ReadAllText(path));
+            JObject gui = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
             if (gui["DPI"] != null) displayDpi = gui["DPI"].Value<int>();
             if (gui["PollRate"] != null) pollRate = gui["PollRate"].Value<int>();
-            if (gui["Language"] != null && gui["Language"].ToString() == "pt-BR") currentLanguage = "pt-BR";
+
+            string reimaginedPath = IOPath.Combine(rootDirectory, ".reimagined.config");
+            bool hasReimaginedPreferences = File.Exists(reimaginedPath);
+            JObject reimagined = hasReimaginedPreferences
+                ? JObject.Parse(File.ReadAllText(reimaginedPath))
+                : new JObject();
+            JToken language = reimagined["Language"] ?? gui["Language"];
+            if (language != null && language.ToString() == "pt-BR") currentLanguage = "pt-BR";
             ignoredDeviceIds.Clear();
-            JArray ignored = gui["IgnoredDeviceIds"] as JArray;
+            JArray ignored = (reimagined["IgnoredDeviceIds"] ?? gui["IgnoredDeviceIds"]) as JArray;
             if (ignored != null)
                 foreach (JToken id in ignored)
                     if (!String.IsNullOrWhiteSpace(id.ToString())) ignoredDeviceIds.Add(id.ToString());
+            if (!hasReimaginedPreferences && (language != null || ignored != null)) SaveReimaginedPreferences();
         }
 
         private void LoadSettings(string profileToSelect)
@@ -978,10 +982,16 @@ namespace RawAccelModern
 
         private void SaveIgnoredDevicePreferences()
         {
-            string path = IOPath.Combine(rootDirectory, ".config");
-            JObject gui = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
-            gui["IgnoredDeviceIds"] = new JArray(ignoredDeviceIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase));
-            File.WriteAllText(path, gui.ToString(Formatting.None));
+            SaveReimaginedPreferences();
+        }
+
+        private void SaveReimaginedPreferences()
+        {
+            string path = IOPath.Combine(rootDirectory, ".reimagined.config");
+            JObject preferences = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
+            preferences["Language"] = currentLanguage;
+            preferences["IgnoredDeviceIds"] = new JArray(ignoredDeviceIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase));
+            File.WriteAllText(path, preferences.ToString(Formatting.None));
         }
 
         private void RefreshConnectedDevices()
