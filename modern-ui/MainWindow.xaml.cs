@@ -56,6 +56,7 @@ namespace RawAccelModern
         private WindowState stateBeforeTray = WindowState.Maximized;
         private string currentLanguage = "en";
         private bool changingLanguage;
+        private string currentTheme = "dark-blue";
         private readonly HashSet<string> ignoredDeviceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private int lastMouseDx;
         private int lastMouseDy;
@@ -67,6 +68,16 @@ namespace RawAccelModern
         private int activeLutPointIndex = -1;
         private int selectedLutPointIndex = -1;
         private Point lutDragStartValue;
+
+        private sealed class ThemePalette
+        {
+            public string Key;
+            public string DisplayName;
+            public readonly Dictionary<string, Color> Colors = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static readonly Dictionary<string, ThemePalette> ThemePalettes = CreateThemePalettes();
+        private static readonly Dictionary<string, string> OriginalThemeRoles = CreateOriginalThemeRoles();
 
         private static readonly Dictionary<string, string> PortugueseText = new Dictionary<string, string>
         {
@@ -159,6 +170,19 @@ namespace RawAccelModern
             { "Charts", "Gráficos" },
             { "Advanced", "Avançado" },
             { "Themes", "Temas" },
+            { "Appearance & Themes", "Aparência e temas" },
+            { "Choose a visual style. This does not change mouse acceleration settings.", "Escolha um estilo visual. Isso não altera as configurações de aceleração do mouse." },
+            { "Current theme: Dark Blue", "Tema atual: Azul escuro" },
+            { "Dark Blue", "Azul escuro" },
+            { "Dark", "Escuro" },
+            { "Light", "Claro" },
+            { "Midnight Purple", "Roxo meia-noite" },
+            { "Emerald", "Esmeralda" },
+            { "Deep navy surfaces with vivid blue accents", "Superfícies azul-marinho com detalhes em azul vivo" },
+            { "Neutral black and graphite for fewer distractions", "Preto e grafite neutros para reduzir distrações" },
+            { "Bright surfaces with clear contrast for daytime use", "Superfícies claras com bom contraste para uso durante o dia" },
+            { "A deep purple style with softer highlights", "Um estilo roxo profundo com destaques mais suaves" },
+            { "Dark green surfaces with an energetic accent", "Superfícies verde-escuras com um destaque vibrante" },
             { "Help", "Ajuda" },
             { "Acceleration", "Aceleração" },
             { "Last (x, y): (0, 0)", "Último (x, y): (0, 0)" },
@@ -381,6 +405,76 @@ namespace RawAccelModern
             public ComboBox ProfileSelector;
         }
 
+        private static ThemePalette CreatePalette(string key, string name, string background, string chrome, string surface,
+            string card, string control, string chart, string border, string grid, string text, string subtext,
+            string muted, string accent, string accentHover, string accentSoft, string hover)
+        {
+            ThemePalette palette = new ThemePalette { Key = key, DisplayName = name };
+            palette.Colors["Background"] = ParseColor(background);
+            palette.Colors["Chrome"] = ParseColor(chrome);
+            palette.Colors["Surface"] = ParseColor(surface);
+            palette.Colors["Card"] = ParseColor(card);
+            palette.Colors["Control"] = ParseColor(control);
+            palette.Colors["Chart"] = ParseColor(chart);
+            palette.Colors["Border"] = ParseColor(border);
+            palette.Colors["Grid"] = ParseColor(grid);
+            palette.Colors["Text"] = ParseColor(text);
+            palette.Colors["Subtext"] = ParseColor(subtext);
+            palette.Colors["Muted"] = ParseColor(muted);
+            palette.Colors["Accent"] = ParseColor(accent);
+            palette.Colors["AccentHover"] = ParseColor(accentHover);
+            palette.Colors["AccentSoft"] = ParseColor(accentSoft);
+            palette.Colors["Hover"] = ParseColor(hover);
+            return palette;
+        }
+
+        private static Dictionary<string, ThemePalette> CreateThemePalettes()
+        {
+            Dictionary<string, ThemePalette> palettes = new Dictionary<string, ThemePalette>(StringComparer.OrdinalIgnoreCase);
+            palettes["dark-blue"] = CreatePalette("dark-blue", "Dark Blue", "#07111F", "#081321", "#0B1627", "#0E1A2C", "#111D31", "#0D182A", "#22334D", "#253752", "#E7EDF6", "#CBD5E5", "#93A2B8", "#1594FB", "#1DA2FF", "#112844", "#17304E");
+            palettes["dark"] = CreatePalette("dark", "Dark", "#0F1013", "#121318", "#15171B", "#191B20", "#22252B", "#14161A", "#30333A", "#343842", "#F0F2F5", "#C8CDD6", "#8E96A4", "#8D9AAF", "#AAB5C8", "#272B33", "#30343C");
+            palettes["light"] = CreatePalette("light", "Light", "#E9EEF5", "#FFFFFF", "#F3F6FA", "#FFFFFF", "#E8EDF4", "#F7F9FC", "#CAD3DF", "#D6DEE8", "#172033", "#35435A", "#66758A", "#1976D2", "#2196F3", "#D8EAFB", "#DCE8F7");
+            palettes["midnight"] = CreatePalette("midnight", "Midnight Purple", "#0C0915", "#100C1B", "#130E20", "#171126", "#211831", "#151022", "#35294D", "#3D3057", "#F0EAFB", "#D4C8E8", "#9A8CAD", "#9B7BFF", "#B49CFF", "#2D2047", "#332652");
+            palettes["emerald"] = CreatePalette("emerald", "Emerald", "#071511", "#091B16", "#0A1D17", "#0C211A", "#112B23", "#0D241D", "#214A3D", "#285649", "#E8F5F0", "#C7DED6", "#88A89D", "#27C98B", "#45DDA2", "#123D30", "#164737");
+            return palettes;
+        }
+
+        private static Dictionary<string, string> CreateOriginalThemeRoles()
+        {
+            Dictionary<string, string> roles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            AddThemeAliases(roles, "Background", "#07111F");
+            AddThemeAliases(roles, "Chrome", "#081321");
+            AddThemeAliases(roles, "Surface", "#0B1627");
+            AddThemeAliases(roles, "Card", "#0E1A2C", "#101D31", "#0B1728", "#0C1728");
+            AddThemeAliases(roles, "Control", "#111D31");
+            AddThemeAliases(roles, "Chart", "#0D182A");
+            AddThemeAliases(roles, "Border", "#22334D", "#26364E", "#293A55", "#263A58", "#20334F", "#263751", "#31547B", "#6B4933");
+            AddThemeAliases(roles, "Grid", "#253752", "#1B2B42", "#263852");
+            AddThemeAliases(roles, "Text", "#E7EDF6", "#F5F8FC", "#DDE7F5", "#DCE6F4", "#DDE6F4", "#FFFFFF");
+            AddThemeAliases(roles, "Subtext", "#CBD5E5", "#B9C6D8", "#AAB7CA", "#A8B4C7");
+            AddThemeAliases(roles, "Muted", "#94A2B8", "#93A2B8", "#8FA0B8", "#8391A7", "#8291A8", "#718198", "#7C8CA3", "#8F9CB0");
+            AddThemeAliases(roles, "Accent", "#1594FB", "#0B8FF5");
+            AddThemeAliases(roles, "AccentHover", "#1DA2FF", "#9DCFFF", "#174C78");
+            AddThemeAliases(roles, "AccentSoft", "#112844", "#12538A", "#173B60");
+            AddThemeAliases(roles, "Hover", "#17304E");
+            return roles;
+        }
+
+        private static void AddThemeAliases(Dictionary<string, string> roles, string role, params string[] colors)
+        {
+            foreach (string color in colors) roles[NormalizeColor(ParseColor(color))] = role;
+        }
+
+        private static Color ParseColor(string value)
+        {
+            return (Color)ColorConverter.ConvertFromString(value);
+        }
+
+        private static string NormalizeColor(Color color)
+        {
+            return color.R.ToString("X2", CultureInfo.InvariantCulture) + color.G.ToString("X2", CultureInfo.InvariantCulture) + color.B.ToString("X2", CultureInfo.InvariantCulture);
+        }
+
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterRawInputDevices([In] RAWINPUTDEVICE[] devices, uint count, uint size);
 
@@ -503,6 +597,122 @@ namespace RawAccelModern
             UpdateCurveEditor();
             UpdateManagedProfileSource();
             if (IsLoaded && settings != null && DetectedDevicesPanel != null) RefreshConnectedDevices();
+            UpdateThemeSelection();
+            UpdateNavigationAppearance();
+        }
+
+        private Color ThemeColor(string role)
+        {
+            ThemePalette palette;
+            if (!ThemePalettes.TryGetValue(currentTheme, out palette)) palette = ThemePalettes["dark-blue"];
+            Color color;
+            return palette.Colors.TryGetValue(role, out color) ? color : Colors.Transparent;
+        }
+
+        private void SetThemeResource(string key, string role)
+        {
+            Resources[key] = new SolidColorBrush(ThemeColor(role));
+        }
+
+        private string ResolveThemeRole(Color color)
+        {
+            ThemePalette active;
+            if (ThemePalettes.TryGetValue(currentTheme, out active))
+            {
+                foreach (KeyValuePair<string, Color> entry in active.Colors)
+                    if (entry.Value.R == color.R && entry.Value.G == color.G && entry.Value.B == color.B) return entry.Key;
+            }
+            string role;
+            if (OriginalThemeRoles.TryGetValue(NormalizeColor(color), out role)) return role;
+            foreach (ThemePalette palette in ThemePalettes.Values)
+                foreach (KeyValuePair<string, Color> entry in palette.Colors)
+                    if (entry.Value.R == color.R && entry.Value.G == color.G && entry.Value.B == color.B) return entry.Key;
+            return null;
+        }
+
+        private Brush ConvertThemeBrush(Brush brush)
+        {
+            SolidColorBrush solid = brush as SolidColorBrush;
+            if (solid == null) return brush;
+            string role = ResolveThemeRole(solid.Color);
+            if (String.IsNullOrEmpty(role)) return brush;
+            Color target = ThemeColor(role);
+            target.A = solid.Color.A;
+            return new SolidColorBrush(target);
+        }
+
+        private void ApplyThemeToVisualTree(DependencyObject element)
+        {
+            if (element == null) return;
+            FrameworkElement frameworkElement = element as FrameworkElement;
+            if (frameworkElement != null && String.Equals(Convert.ToString(frameworkElement.Tag), "ThemePreview", StringComparison.Ordinal)) return;
+
+            Control control = element as Control;
+            if (control != null)
+            {
+                control.SetCurrentValue(Control.ForegroundProperty, ConvertThemeBrush(control.Foreground));
+            }
+            TextBlock text = element as TextBlock;
+            if (text != null) text.SetCurrentValue(TextBlock.ForegroundProperty, ConvertThemeBrush(text.Foreground));
+            Shape shape = element as Shape;
+            if (shape != null)
+            {
+                shape.SetCurrentValue(Shape.FillProperty, ConvertThemeBrush(shape.Fill));
+                shape.SetCurrentValue(Shape.StrokeProperty, ConvertThemeBrush(shape.Stroke));
+            }
+
+            int count = VisualTreeHelper.GetChildrenCount(element);
+            for (int i = 0; i < count; i++) ApplyThemeToVisualTree(VisualTreeHelper.GetChild(element, i));
+        }
+
+        private void ApplyTheme(string themeKey, bool savePreference)
+        {
+            if (!ThemePalettes.ContainsKey(themeKey)) themeKey = "dark-blue";
+            currentTheme = themeKey;
+            SetThemeResource("BackgroundBrush", "Background");
+            SetThemeResource("SurfaceBrush", "Surface");
+            SetThemeResource("CardBrush", "Card");
+            SetThemeResource("CardAltBrush", "Card");
+            SetThemeResource("BorderBrush", "Border");
+            SetThemeResource("MutedBrush", "Muted");
+            SetThemeResource("AccentBrush", "Accent");
+            SetThemeResource("TextBrush", "Text");
+            SetThemeResource("ControlBrush", "Control");
+            SetThemeResource("ControlBorderBrush", "Border");
+            SetThemeResource("HoverBrush", "Hover");
+            SetThemeResource("AccentHoverBrush", "AccentHover");
+            SetThemeResource("AccentSoftBrush", "AccentSoft");
+            SetThemeResource("ChromeBrush", "Chrome");
+            SetThemeResource("ChartBrush", "Chart");
+            SetThemeResource("GridBrush", "Grid");
+            ApplyThemeToVisualTree(this);
+            UpdateNavigationAppearance();
+            UpdateThemeSelection();
+            if (IsLoaded && settings != null) DrawChart();
+            if (savePreference) SaveReimaginedPreferences();
+        }
+
+        private void ThemeChoice_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            string key = button == null ? null : Convert.ToString(button.Tag);
+            if (!String.IsNullOrEmpty(key)) ApplyTheme(key, true);
+        }
+
+        private void UpdateThemeSelection()
+        {
+            if (CurrentThemeText == null) return;
+            ThemePalette palette;
+            if (!ThemePalettes.TryGetValue(currentTheme, out palette)) palette = ThemePalettes["dark-blue"];
+            CurrentThemeText.Text = (currentLanguage == "pt-BR" ? "Tema atual: " : "Current theme: ") + T(palette.DisplayName);
+            Button[] buttons = { DarkBlueThemeButton, DarkThemeButton, LightThemeButton, MidnightThemeButton, EmeraldThemeButton };
+            foreach (Button button in buttons)
+            {
+                if (button == null) continue;
+                bool selected = String.Equals(Convert.ToString(button.Tag), currentTheme, StringComparison.OrdinalIgnoreCase);
+                button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
+                button.BorderBrush = new SolidColorBrush(selected ? ThemeColor("Accent") : ThemeColor("Border"));
+            }
         }
 
         private void InitializeLanguageSelector()
@@ -545,6 +755,7 @@ namespace RawAccelModern
             try
             {
                 LoadGuiPreferences();
+                ApplyTheme(currentTheme, false);
                 LoadSettings(null);
                 LoadAdvancedSettings();
                 DriverStatus.Text = T("Ready");
@@ -789,12 +1000,14 @@ namespace RawAccelModern
                 : new JObject();
             JToken language = reimagined["Language"] ?? gui["Language"];
             if (language != null && language.ToString() == "pt-BR") currentLanguage = "pt-BR";
+            JToken theme = reimagined["Theme"] ?? gui["Theme"];
+            if (theme != null && ThemePalettes.ContainsKey(theme.ToString())) currentTheme = theme.ToString();
             ignoredDeviceIds.Clear();
             JArray ignored = (reimagined["IgnoredDeviceIds"] ?? gui["IgnoredDeviceIds"]) as JArray;
             if (ignored != null)
                 foreach (JToken id in ignored)
                     if (!String.IsNullOrWhiteSpace(id.ToString())) ignoredDeviceIds.Add(id.ToString());
-            if (!hasReimaginedPreferences && (language != null || ignored != null)) SaveReimaginedPreferences();
+            if (!hasReimaginedPreferences && (language != null || ignored != null || theme != null)) SaveReimaginedPreferences();
         }
 
         private void LoadSettings(string profileToSelect)
@@ -1131,24 +1344,37 @@ namespace RawAccelModern
         {
             ChartsPage.Visibility = Visibility.Visible;
             AdvancedPage.Visibility = Visibility.Collapsed;
-            ChartsNavText.Foreground = new SolidColorBrush(Color.FromRgb(21, 148, 251));
-            ChartsNavIcon.Foreground = ChartsNavText.Foreground;
-            AdvancedNavText.Foreground = new SolidColorBrush(Color.FromRgb(148, 162, 184));
-            AdvancedNavIcon.Foreground = AdvancedNavText.Foreground;
-            NavUnderline.RenderTransform = new TranslateTransform(-62, 0);
+            ThemesPage.Visibility = Visibility.Collapsed;
+            UpdateNavigationAppearance();
         }
 
         private void Advanced_Click(object sender, RoutedEventArgs e)
         {
             ChartsPage.Visibility = Visibility.Collapsed;
             AdvancedPage.Visibility = Visibility.Visible;
-            AdvancedNavText.Foreground = new SolidColorBrush(Color.FromRgb(21, 148, 251));
-            AdvancedNavIcon.Foreground = AdvancedNavText.Foreground;
-            ChartsNavText.Foreground = new SolidColorBrush(Color.FromRgb(148, 162, 184));
-            ChartsNavIcon.Foreground = ChartsNavText.Foreground;
-            NavUnderline.RenderTransform = new TranslateTransform(62, 0);
+            ThemesPage.Visibility = Visibility.Collapsed;
+            UpdateNavigationAppearance();
             LoadAdvancedSettings();
             RefreshConnectedDevices();
+        }
+
+        private void UpdateNavigationAppearance()
+        {
+            if (ChartsNavText == null || AdvancedNavText == null || ThemesNavText == null) return;
+            bool charts = ChartsPage.Visibility == Visibility.Visible;
+            bool advanced = AdvancedPage.Visibility == Visibility.Visible;
+            bool themes = ThemesPage.Visibility == Visibility.Visible;
+            SolidColorBrush accent = new SolidColorBrush(ThemeColor("Accent"));
+            SolidColorBrush muted = new SolidColorBrush(ThemeColor("Muted"));
+            ChartsNavText.Foreground = charts ? accent : muted;
+            ChartsNavIcon.Foreground = ChartsNavText.Foreground;
+            AdvancedNavText.Foreground = advanced ? accent : muted;
+            AdvancedNavIcon.Foreground = AdvancedNavText.Foreground;
+            ThemesNavText.Foreground = themes ? accent : muted;
+            ThemesNavIcon.Foreground = ThemesNavText.Foreground;
+            ChartsNavIndicator.Visibility = charts ? Visibility.Visible : Visibility.Collapsed;
+            AdvancedNavIndicator.Visibility = advanced ? Visibility.Visible : Visibility.Collapsed;
+            ThemesNavIndicator.Visibility = themes ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void RefreshDevices_Click(object sender, RoutedEventArgs e)
@@ -1171,6 +1397,7 @@ namespace RawAccelModern
             string path = IOPath.Combine(rootDirectory, ".reimagined.config");
             JObject preferences = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
             preferences["Language"] = currentLanguage;
+            preferences["Theme"] = currentTheme;
             preferences["IgnoredDeviceIds"] = new JArray(ignoredDeviceIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase));
             File.WriteAllText(path, preferences.ToString(Formatting.None));
         }
@@ -2577,6 +2804,7 @@ namespace RawAccelModern
             StatOutput.Text = values[atTen].ToString("0.00", CultureInfo.InvariantCulture);
             StatX.Text = (10 * values[atTen]).ToString("0.0", CultureInfo.InvariantCulture);
             StatY.Text = (10 * values[atTen] * ParseOrDefault(RatioBox.Text, 1)).ToString("0.0", CultureInfo.InvariantCulture);
+            ApplyThemeToVisualTree(ChartCanvas);
         }
 
         private void AddNaturalCurveHandles(List<double> values)
@@ -2821,7 +3049,11 @@ namespace RawAccelModern
 
         private void Themes_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(T("The modern interface uses the reference palette. Classic themes remain available in the original rawaccel.exe."), T("Themes"), MessageBoxButton.OK, MessageBoxImage.Information);
+            ChartsPage.Visibility = Visibility.Collapsed;
+            AdvancedPage.Visibility = Visibility.Collapsed;
+            ThemesPage.Visibility = Visibility.Visible;
+            UpdateNavigationAppearance();
+            UpdateThemeSelection();
         }
 
         private void Help_Click(object sender, RoutedEventArgs e)

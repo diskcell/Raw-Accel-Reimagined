@@ -16,6 +16,7 @@ Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original
 - Ajustes de eixos, resposta vertical e suavização com ajuda contextual.
 - Editor dedicado para Natural, com controles arrastáveis sincronizados com Input Offset, Decay Rate e Limit.
 - Edição livre universal: Natural, Classic, Jump, Synchronous e Power podem ser convertidas para pontos LUT, arrastados nos dois eixos, adicionados ou removidos antes de aplicar.
+- Cinco temas persistentes — Azul Escuro, Escuro, Claro, Roxo Meia-noite e Esmeralda — com navegação superior reorganizada.
 - Minimização para a bandeja do Windows e desligamento explícito do driver.
 - Modern WPF UI, live graph, device-aware profiles, axis tuning, contextual help and system tray support.
 

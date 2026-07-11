@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Raw Accel Reimagined" Icon="branding/raw-accel-reimagined-logo.png" Width="1500" Height="870" MinWidth="1180" MinHeight="720"
         WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" WindowState="Maximized"
-        Background="#07111F" Foreground="#E7EDF6" FontFamily="Segoe UI">
+        Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextBrush}" FontFamily="Segoe UI">
   <Window.Resources>
     <SolidColorBrush x:Key="BackgroundBrush" Color="#07111F" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#0B1627" />
@@ -12,15 +12,24 @@
     <SolidColorBrush x:Key="BorderBrush" Color="#22334D" />
     <SolidColorBrush x:Key="MutedBrush" Color="#93A2B8" />
     <SolidColorBrush x:Key="AccentBrush" Color="#1594FB" />
+    <SolidColorBrush x:Key="TextBrush" Color="#E7EDF6" />
+    <SolidColorBrush x:Key="ControlBrush" Color="#111D31" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#293A55" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#17304E" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#1DA2FF" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#112844" />
+    <SolidColorBrush x:Key="ChromeBrush" Color="#081321" />
+    <SolidColorBrush x:Key="ChartBrush" Color="#0D182A" />
+    <SolidColorBrush x:Key="GridBrush" Color="#253752" />
     <Style TargetType="TextBlock">
-      <Setter Property="Foreground" Value="#E7EDF6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
       <Setter Property="FontSize" Value="14" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style TargetType="TextBox">
-      <Setter Property="Foreground" Value="#F5F8FC" />
-      <Setter Property="Background" Value="#111D31" />
-      <Setter Property="BorderBrush" Value="#293A55" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Padding" Value="13,8" />
       <Setter Property="FontSize" Value="14" />
@@ -42,14 +51,14 @@
       <EventSetter Event="LostKeyboardFocus" Handler="NumericBox_LostKeyboardFocus" />
       <Style.Triggers>
         <Trigger Property="IsKeyboardFocused" Value="True">
-          <Setter Property="BorderBrush" Value="#1594FB" />
+          <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Trigger>
       </Style.Triggers>
     </Style>
     <Style x:Key="TextEntryBox" TargetType="TextBox">
-      <Setter Property="Foreground" Value="#F5F8FC" />
-      <Setter Property="Background" Value="#111D31" />
-      <Setter Property="BorderBrush" Value="#293A55" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Padding" Value="13,8" />
       <Setter Property="FontSize" Value="14" />
@@ -63,12 +72,12 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
-      <Style.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="#1594FB" /></Trigger></Style.Triggers>
+      <Style.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" /></Trigger></Style.Triggers>
     </Style>
     <Style x:Key="ModernButton" TargetType="Button">
-      <Setter Property="Foreground" Value="#DDE7F5" />
-      <Setter Property="Background" Value="#101D31" />
-      <Setter Property="BorderBrush" Value="#263A58" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="{DynamicResource CardAltBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Padding" Value="14,9" />
       <Setter Property="Cursor" Value="Hand" />
@@ -80,7 +89,7 @@
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#17304E" /></Trigger>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger>
               <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.8" /></Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -90,20 +99,21 @@
     <Style x:Key="NavButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Foreground" Value="#94A2B8" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
       <Setter Property="FontSize" Value="16" />
-      <Setter Property="Padding" Value="18,14" />
+      <Setter Property="Padding" Value="12,14" />
+      <Setter Property="Margin" Value="6,0" />
     </Style>
     <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
-      <Setter Property="Background" Value="#0B8FF5" />
-      <Setter Property="BorderBrush" Value="#1DA2FF" />
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
       <Setter Property="Foreground" Value="White" />
       <Setter Property="FontSize" Value="15" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style TargetType="ComboBoxItem">
-      <Setter Property="Foreground" Value="#E7EDF6" />
-      <Setter Property="Background" Value="#111D31" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
       <Setter Property="Padding" Value="12,8" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       <Style.Triggers>
@@ -112,9 +122,9 @@
       </Style.Triggers>
     </Style>
     <Style TargetType="ComboBox">
-      <Setter Property="Foreground" Value="#E7EDF6" />
-      <Setter Property="Background" Value="#111D31" />
-      <Setter Property="BorderBrush" Value="#293A55" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="Padding" Value="10,8" />
       <Setter Property="FontSize" Value="14" />
       <Setter Property="Template">
@@ -137,7 +147,7 @@
                 <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" />
               </ToggleButton>
               <Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                <Border Background="#111D31" BorderBrush="#293A55" BorderThickness="1" CornerRadius="7" MinWidth="{TemplateBinding ActualWidth}" Margin="0,3,0,0">
+                <Border Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="7" MinWidth="{TemplateBinding ActualWidth}" Margin="0,3,0,0">
                   <ScrollViewer MaxHeight="300"><ItemsPresenter /></ScrollViewer>
                 </Border>
               </Popup>
@@ -147,8 +157,8 @@
       </Setter>
     </Style>
     <Style x:Key="Card" TargetType="Border">
-      <Setter Property="Background" Value="{StaticResource CardBrush}" />
-      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+      <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="13" />
       <Setter Property="Padding" Value="22,18" />
@@ -191,25 +201,32 @@
       <Setter Property="Foreground" Value="#DDE6F4" />
       <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
+    <Style x:Key="ThemeChoiceButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
+      <Setter Property="Height" Value="158" />
+      <Setter Property="Padding" Value="18" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
   </Window.Resources>
 
-  <Border BorderBrush="#26364E" BorderThickness="1">
+  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="*"/><RowDefinition Height="42"/></Grid.RowDefinitions>
 
-      <Grid Grid.Row="0" Background="#081321" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="430"/><ColumnDefinition Width="*"/><ColumnDefinition Width="410"/></Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="30,0,0,0" VerticalAlignment="Center">
+      <Grid Grid.Row="0" Background="{DynamicResource ChromeBrush}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="340"/><ColumnDefinition Width="*"/><ColumnDefinition Width="420"/></Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="24,0,0,0" VerticalAlignment="Center">
           <Image Source="branding/raw-accel-reimagined-logo.png" Width="46" Height="46" Stretch="Uniform" Margin="0,0,14,0" />
           <TextBlock Text="Raw Accel Reimagined" FontSize="21" FontWeight="SemiBold" />
           <TextBlock Text="v1.7.0" Foreground="#8391A7" Margin="14,5,0,0" />
         </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-          <Button Style="{StaticResource NavButton}" Foreground="#1594FB" Click="Charts_Click"><StackPanel Orientation="Horizontal"><TextBlock x:Name="ChartsNavIcon" Text="⌁" Foreground="#1594FB" FontSize="22" Margin="0,0,8,0"/><TextBlock x:Name="ChartsNavText" Text="Charts" Foreground="#1594FB" FontSize="16"/></StackPanel></Button>
-          <Button Style="{StaticResource NavButton}" Click="Advanced_Click"><StackPanel Orientation="Horizontal"><TextBlock x:Name="AdvancedNavIcon" Text="⚙" FontSize="18" Foreground="#94A2B8" Margin="0,0,8,0"/><TextBlock x:Name="AdvancedNavText" Text="Advanced" Foreground="#94A2B8" FontSize="16"/></StackPanel></Button>
-          <Button Style="{StaticResource NavButton}" Click="Themes_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="☼" FontSize="21" Foreground="#94A2B8" Margin="0,0,8,0"/><TextBlock Text="Themes" Foreground="#94A2B8" FontSize="16"/></StackPanel></Button>
-          <Button Style="{StaticResource NavButton}" Click="Help_Click"><StackPanel Orientation="Horizontal"><TextBlock Text="?" FontSize="18" Foreground="#94A2B8" Margin="0,0,8,0"/><TextBlock Text="Help" Foreground="#94A2B8" FontSize="16"/></StackPanel></Button>
-        </StackPanel>
+        <Grid Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="540">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+          <Button Grid.Column="0" Style="{StaticResource NavButton}" Click="Charts_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="ChartsNavIcon" Text="⌁" FontSize="22" Margin="0,0,11,0"/><TextBlock x:Name="ChartsNavText" Text="Charts" FontSize="16"/></StackPanel><Border x:Name="ChartsNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2"/></Grid></Button>
+          <Button Grid.Column="1" Style="{StaticResource NavButton}" Click="Advanced_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="AdvancedNavIcon" Text="⚙" FontSize="18" Margin="0,0,11,0"/><TextBlock x:Name="AdvancedNavText" Text="Advanced" FontSize="16"/></StackPanel><Border x:Name="AdvancedNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2" Visibility="Collapsed"/></Grid></Button>
+          <Button Grid.Column="2" Style="{StaticResource NavButton}" Click="Themes_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="ThemesNavIcon" Text="☼" FontSize="21" Margin="0,0,11,0"/><TextBlock x:Name="ThemesNavText" Text="Themes" FontSize="16"/></StackPanel><Border x:Name="ThemesNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2" Visibility="Collapsed"/></Grid></Button>
+          <Button Grid.Column="3" Style="{StaticResource NavButton}" Click="Help_Click"><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock Text="?" FontSize="18" Margin="0,0,11,0"/><TextBlock Text="Help" FontSize="16"/></StackPanel></Button>
+        </Grid>
         <Grid Grid.Column="2" Margin="10,0,12,0">
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="130"/><ColumnDefinition Width="42"/><ColumnDefinition Width="42"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
           <ComboBox x:Name="ProfileBox" Grid.Column="0" Height="42" VerticalAlignment="Center" SelectionChanged="ProfileBox_SelectionChanged" />
@@ -218,7 +235,6 @@
           <Button Grid.Column="3" Content="□" Style="{StaticResource NavButton}" Padding="0" Click="Maximize_Click" />
           <Button Grid.Column="4" Content="×" Style="{StaticResource NavButton}" Padding="0" Click="Close_Click" />
         </Grid>
-        <Border x:Name="NavUnderline" Grid.Column="1" Height="3" Background="#1594FB" VerticalAlignment="Bottom" Width="110" HorizontalAlignment="Center" />
       </Grid>
 
       <Grid x:Name="ChartsPage" Grid.Row="1" Margin="18,12,18,12">
@@ -332,8 +348,8 @@
                 <Button Content="⊕" Style="{StaticResource ModernButton}" Padding="9,5"/><Button Content="⊖" Style="{StaticResource ModernButton}" Padding="9,5" Margin="6,0,0,0"/>
               </StackPanel>
             </Grid>
-            <Canvas x:Name="ChartCanvas" Grid.Row="1" Background="#0D182A" SizeChanged="ChartCanvas_SizeChanged" PreviewMouseLeftButtonDown="ChartCanvas_PreviewMouseLeftButtonDown" MouseMove="ChartCanvas_MouseMove" MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp" LostMouseCapture="ChartCanvas_LostMouseCapture" ClipToBounds="True" />
-            <Border Grid.Row="2" Background="#0C1728" BorderBrush="#263751" BorderThickness="1" CornerRadius="9" Margin="0,12,0,0">
+            <Canvas x:Name="ChartCanvas" Grid.Row="1" Background="{DynamicResource ChartBrush}" SizeChanged="ChartCanvas_SizeChanged" PreviewMouseLeftButtonDown="ChartCanvas_PreviewMouseLeftButtonDown" MouseMove="ChartCanvas_MouseMove" MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp" LostMouseCapture="ChartCanvas_LostMouseCapture" ClipToBounds="True" />
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9" Margin="0,12,0,0">
               <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0"><TextBlock Text="X @ 10" Foreground="#94A2B8" HorizontalAlignment="Center"/><TextBlock x:Name="StatX" Text="12.7" FontSize="17" HorizontalAlignment="Center"/></StackPanel>
                 <StackPanel Grid.Column="1"><TextBlock Text="Y @ 10" Foreground="#94A2B8" HorizontalAlignment="Center"/><TextBlock x:Name="StatY" Text="12.7" FontSize="17" HorizontalAlignment="Center"/></StackPanel>
@@ -368,7 +384,7 @@
               <StackPanel Orientation="Horizontal" Margin="0,0,0,13"><CheckBox x:Name="ConstantIntervalCheck" Content=" Use a constant interval based on polling rate" Foreground="#DCE6F4" FontSize="14"/><Button Style="{StaticResource InfoButton}" Tag="Use a constant interval based on polling rate"/></StackPanel>
               <StackPanel Orientation="Horizontal"><CheckBox x:Name="DisableDefaultDeviceCheck" Content=" Disable acceleration for default devices" Foreground="#DCE6F4" FontSize="14"/><Button Style="{StaticResource InfoButton}" Tag="Disable acceleration for default devices"/></StackPanel>
             </StackPanel>
-            <Border Grid.Row="5" Background="#0B1728" BorderBrush="#20334F" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,24,0,18" VerticalAlignment="Top">
+            <Border Grid.Row="5" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,24,0,18" VerticalAlignment="Top">
               <TextBlock TextWrapping="Wrap" Foreground="#8FA0B8" Text="DPI normalization changes the speed unit used by the curve. Polling rate should remain 0 unless automatic timing causes stutter. These settings do not change the acceleration formulas." />
             </Border>
             <Grid Grid.Row="6"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -439,7 +455,7 @@
             <StackPanel>
               <TextBlock Text="Driver Control" FontSize="22" FontWeight="SemiBold" />
               <TextBlock Text="Communication and profile activation" Foreground="#8291A8" Margin="0,5,0,20" />
-              <Border Background="#0B1728" BorderBrush="#20334F" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+              <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                 <StackPanel Orientation="Horizontal"><Ellipse x:Name="AdvancedStatusDot" Fill="#7C8CA3" Width="10" Height="10" Margin="0,0,10,0"/><TextBlock x:Name="AdvancedDriverStatus" Text="Not tested" Foreground="#AAB7CA" /></StackPanel>
               </Border>
               <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="29"/></Grid.ColumnDefinitions><Button Height="45" Style="{StaticResource ModernButton}" Content="Test Driver Communication" Click="TestDriver_Click"/><Button Grid.Column="1" Style="{StaticResource InfoButton}" Tag="Test Driver Communication" Margin="8,0,0,0"/></Grid>
@@ -479,7 +495,62 @@
         </ScrollViewer>
       </Grid>
 
-      <Grid Grid.Row="2" Background="#081321">
+      <Grid x:Name="ThemesPage" Grid.Row="1" Margin="28,22" Visibility="Collapsed">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <StackPanel Margin="4,0,0,22">
+          <TextBlock Text="Appearance &amp; Themes" FontSize="28" FontWeight="SemiBold" />
+          <TextBlock Text="Choose a visual style. This does not change mouse acceleration settings." Foreground="{DynamicResource MutedBrush}" FontSize="14" Margin="0,6,0,0" />
+          <TextBlock x:Name="CurrentThemeText" Text="Current theme: Dark Blue" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="0,8,0,0" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <Grid Margin="4,0,16,8" MaxWidth="1180" HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="370"/><ColumnDefinition Width="18"/><ColumnDefinition Width="370"/><ColumnDefinition Width="18"/><ColumnDefinition Width="370"/></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="18"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+            <Button x:Name="DarkBlueThemeButton" Grid.Column="0" Style="{StaticResource ThemeChoiceButton}" Tag="dark-blue" Click="ThemeChoice_Click">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal"><Ellipse Tag="ThemePreview" Fill="#1594FB" Width="13" Height="13" Margin="0,0,10,0"/><TextBlock Text="Dark Blue" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <Border Tag="ThemePreview" Grid.Row="1" Background="#07111F" BorderBrush="#22334D" BorderThickness="1" CornerRadius="9" Margin="0,13,0,10"><StackPanel Orientation="Horizontal" Margin="14"><Border Width="54" Height="26" Background="#0E1A2C" CornerRadius="6"/><Border Width="105" Height="26" Background="#111D31" CornerRadius="6" Margin="9,0"/><Border Width="34" Height="26" Background="#1594FB" CornerRadius="6"/></StackPanel></Border>
+                <TextBlock Grid.Row="2" Text="Deep navy surfaces with vivid blue accents" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+              </Grid>
+            </Button>
+
+            <Button x:Name="DarkThemeButton" Grid.Column="2" Style="{StaticResource ThemeChoiceButton}" Tag="dark" Click="ThemeChoice_Click">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal"><Ellipse Tag="ThemePreview" Fill="#A7B0C0" Width="13" Height="13" Margin="0,0,10,0"/><TextBlock Text="Dark" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <Border Tag="ThemePreview" Grid.Row="1" Background="#0F1013" BorderBrush="#30333A" BorderThickness="1" CornerRadius="9" Margin="0,13,0,10"><StackPanel Orientation="Horizontal" Margin="14"><Border Width="54" Height="26" Background="#191B20" CornerRadius="6"/><Border Width="105" Height="26" Background="#22252B" CornerRadius="6" Margin="9,0"/><Border Width="34" Height="26" Background="#8D9AAF" CornerRadius="6"/></StackPanel></Border>
+                <TextBlock Grid.Row="2" Text="Neutral black and graphite for fewer distractions" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+              </Grid>
+            </Button>
+
+            <Button x:Name="LightThemeButton" Grid.Column="4" Style="{StaticResource ThemeChoiceButton}" Tag="light" Click="ThemeChoice_Click">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal"><Ellipse Tag="ThemePreview" Fill="#1976D2" Width="13" Height="13" Margin="0,0,10,0"/><TextBlock Text="Light" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <Border Tag="ThemePreview" Grid.Row="1" Background="#F3F6FA" BorderBrush="#CAD3DF" BorderThickness="1" CornerRadius="9" Margin="0,13,0,10"><StackPanel Orientation="Horizontal" Margin="14"><Border Width="54" Height="26" Background="#FFFFFF" CornerRadius="6"/><Border Width="105" Height="26" Background="#E8EDF4" CornerRadius="6" Margin="9,0"/><Border Width="34" Height="26" Background="#1976D2" CornerRadius="6"/></StackPanel></Border>
+                <TextBlock Grid.Row="2" Text="Bright surfaces with clear contrast for daytime use" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+              </Grid>
+            </Button>
+
+            <Button x:Name="MidnightThemeButton" Grid.Row="2" Grid.Column="0" Style="{StaticResource ThemeChoiceButton}" Tag="midnight" Click="ThemeChoice_Click">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal"><Ellipse Tag="ThemePreview" Fill="#9B7BFF" Width="13" Height="13" Margin="0,0,10,0"/><TextBlock Text="Midnight Purple" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <Border Tag="ThemePreview" Grid.Row="1" Background="#0C0915" BorderBrush="#35294D" BorderThickness="1" CornerRadius="9" Margin="0,13,0,10"><StackPanel Orientation="Horizontal" Margin="14"><Border Width="54" Height="26" Background="#171126" CornerRadius="6"/><Border Width="105" Height="26" Background="#211831" CornerRadius="6" Margin="9,0"/><Border Width="34" Height="26" Background="#9B7BFF" CornerRadius="6"/></StackPanel></Border>
+                <TextBlock Grid.Row="2" Text="A deep purple style with softer highlights" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+              </Grid>
+            </Button>
+
+            <Button x:Name="EmeraldThemeButton" Grid.Row="2" Grid.Column="2" Style="{StaticResource ThemeChoiceButton}" Tag="emerald" Click="ThemeChoice_Click">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal"><Ellipse Tag="ThemePreview" Fill="#27C98B" Width="13" Height="13" Margin="0,0,10,0"/><TextBlock Text="Emerald" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <Border Tag="ThemePreview" Grid.Row="1" Background="#071511" BorderBrush="#214A3D" BorderThickness="1" CornerRadius="9" Margin="0,13,0,10"><StackPanel Orientation="Horizontal" Margin="14"><Border Width="54" Height="26" Background="#0C211A" CornerRadius="6"/><Border Width="105" Height="26" Background="#112B23" CornerRadius="6" Margin="9,0"/><Border Width="34" Height="26" Background="#27C98B" CornerRadius="6"/></StackPanel></Border>
+                <TextBlock Grid.Row="2" Text="Dark green surfaces with an energetic accent" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+              </Grid>
+            </Button>
+          </Grid>
+        </ScrollViewer>
+      </Grid>
+
+      <Grid Grid.Row="2" Background="{DynamicResource ChromeBrush}">
         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="380"/></Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Margin="26,0,0,0"><Ellipse x:Name="StatusDot" Fill="#20C56B" Width="10" Height="10"/><TextBlock Text="Driver status:" Foreground="#8F9CB0" Margin="10,0,5,0"/><TextBlock x:Name="DriverStatus" Text="Ready" Foreground="#20C56B"/></StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,24,0"><TextBlock Text="Input:" Foreground="#8F9CB0"/><TextBlock x:Name="InputRateText" Text=" 1000 Hz" Foreground="#1594FB"/><TextBlock Text="   Output:" Foreground="#8F9CB0"/><TextBlock x:Name="OutputRateText" Text=" 1000 Hz" Foreground="#1594FB"/><TextBlock Text="   ⚙" FontSize="18"/></StackPanel>
