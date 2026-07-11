@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ColorScheme xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Modern Blue Theme</Name>
+  <ChartBackground Web="#0D182A" />
+  <ChartForeground Web="#8C9BB3" />
+  <Primary Web="#169BFF" />
+  <Secondary Web="#5CC8FF" />
+  <MouseMovement Web="#FF3B4E" />
+  <Field Web="#111D31" />
+  <OnField Web="#DCE7F7" />
+  <OnFocusedField Web="#FFFFFF" />
+  <EditedField Web="#16345A" />
+  <OnEditedField Web="#F2F7FF" />
+  <ButtonFace Web="#0E8FF7" />
+  <ButtonBorder Web="#1AA0FF" />
+  <Control Web="#101B2D" />
+  <ControlBorder Web="#263650" />
+  <OnControl Web="#D3DEEF" />
+  <DisabledControl Web="#172337" />
+  <OnDisabledControl Web="#64748B" />
+  <Background Web="#07111F" />
+  <OnBackground Web="#E7EDF6" />
+  <Surface Web="#0B1627" />
+  <MenuBackground Web="#081321" />
+  <MenuSelectedBorder Web="#168EF3" />
+  <MenuSelected Web="#102A47" />
+  <CheckBoxBackground Web="#11233A" />
+  <CheckBoxBorder Web="#37516F" />
+  <CheckBoxHover Web="#174D7A" />
+  <CheckBoxChecked Web="#1594FB" />
+  <UseAccentGradientsForCheckboxes>true</UseAccentGradientsForCheckboxes>
+  <UseAccentGradientsForButtons>true</UseAccentGradientsForButtons>
+</ColorScheme>

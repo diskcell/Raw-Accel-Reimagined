@@ -1,0 +1,28 @@
+# Local user state and hardware associations
+.config
+settings.json
+
+# Local development notes and backups
+RELATORIO_PROJETO_RAWACCEL_MODERNO.md
+backups/
+.agents/
+.codex/
+
+# Build output
+modern-ui/bin/
+modern-ui/obj/
+modern-ui/diagnostics/*.exe
+modern-ui/diagnostics/*.exe.config
+modern-ui/diagnostics/*.dll
+modern-ui/branding/BuildBrandAssets.exe
+modern-ui/branding/raw-accel-reimagined-chroma.png
+modern-ui/preview*.png
+modern-ui/rawaccel-modern.ico
+
+# IDE and OS files
+.vs/
+*.user
+*.suo
+*.tmp
+Thumbs.db
+Desktop.ini
