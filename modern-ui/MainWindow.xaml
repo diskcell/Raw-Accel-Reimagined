@@ -250,6 +250,10 @@
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><TextBlock Text="Curve / Profile" Foreground="#AAB7CA"/><Button Style="{StaticResource InfoButton}" Tag="Curve / Profile"/></StackPanel>
                 <ComboBox x:Name="ModeBox" Height="42" SelectionChanged="ModeBox_SelectionChanged"><ComboBoxItem Content="Natural" Tag="natural"/><ComboBoxItem Content="Classic" Tag="classic"/><ComboBoxItem Content="Jump" Tag="jump"/><ComboBoxItem Content="Synchronous" Tag="synchronous"/><ComboBoxItem Content="Power" Tag="power"/><ComboBoxItem Content="LUT" Tag="lut"/><ComboBoxItem Content="No Accel" Tag="noaccel"/></ComboBox>
+                <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                  <Button x:Name="FreeEditButton" Height="38" Style="{StaticResource ModernButton}" Content="Convert to Free Edit (LUT)" Click="ConvertToFreeEdit_Click" />
+                  <Button Grid.Column="1" Style="{StaticResource InfoButton}" Tag="Convert to Free Edit (LUT)" Margin="8,0,0,0"/>
+                </Grid>
               </StackPanel>
             </Border>
 
@@ -285,6 +289,19 @@
               </StackPanel>
             </Border>
 
+            <Border x:Name="LutEditorCard" Style="{StaticResource Card}" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock Text="Free Curve Editor (LUT)" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="Drag points in any direction. Values are saved only after Apply." TextWrapping="Wrap" Foreground="#718198" FontSize="11" Margin="0,3,0,9" />
+                <TextBlock x:Name="LutPointsSummary" Text="0 editable points" Foreground="#8FA0B8" FontSize="11" />
+                <TextBox x:Name="LutPointsBox" IsReadOnly="True" TextWrapping="Wrap" Height="58" VerticalScrollBarVisibility="Auto" Margin="0,5,0,9" FontSize="11" />
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <Button x:Name="AddLutPointButton" Height="36" Style="{StaticResource ModernButton}" Content="Add Point" Click="AddLutPoint_Click" />
+                  <Button x:Name="RemoveLutPointButton" Grid.Column="2" Height="36" Style="{StaticResource ModernButton}" Content="Remove Selected" Click="RemoveLutPoint_Click" IsEnabled="False" />
+                </Grid>
+              </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource Card}">
               <StackPanel>
                 <TextBlock Text="Vertical Response" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
@@ -308,14 +325,14 @@
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="50"/><RowDefinition Height="*"/><RowDefinition Height="76"/></Grid.RowDefinitions>
             <Grid Grid.Row="0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="520"/></Grid.ColumnDefinitions>
-              <StackPanel Orientation="Horizontal"><TextBlock Text="Sensitivity" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="  ⓘ" Foreground="#94A2B8"/></StackPanel>
+              <StackPanel><StackPanel Orientation="Horizontal"><TextBlock Text="Sensitivity" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="  ⓘ" Foreground="#94A2B8"/></StackPanel><TextBlock x:Name="CurveDragHint" Text="Drag Natural handles, then press Apply" Foreground="#718198" FontSize="11" Margin="0,2,0,0"/></StackPanel>
               <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="━" Foreground="#1594FB" FontSize="22"/><TextBlock Text=" Accelerated Sensitivity" Margin="6,0,25,0"/>
                 <TextBlock Text="□" Foreground="#FF3B4E"/><TextBlock Text=" Last Mouse Move" Margin="6,0,20,0"/>
                 <Button Content="⊕" Style="{StaticResource ModernButton}" Padding="9,5"/><Button Content="⊖" Style="{StaticResource ModernButton}" Padding="9,5" Margin="6,0,0,0"/>
               </StackPanel>
             </Grid>
-            <Canvas x:Name="ChartCanvas" Grid.Row="1" Background="#0D182A" SizeChanged="ChartCanvas_SizeChanged" ClipToBounds="True" />
+            <Canvas x:Name="ChartCanvas" Grid.Row="1" Background="#0D182A" SizeChanged="ChartCanvas_SizeChanged" PreviewMouseLeftButtonDown="ChartCanvas_PreviewMouseLeftButtonDown" MouseMove="ChartCanvas_MouseMove" MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp" LostMouseCapture="ChartCanvas_LostMouseCapture" ClipToBounds="True" />
             <Border Grid.Row="2" Background="#0C1728" BorderBrush="#263751" BorderThickness="1" CornerRadius="9" Margin="0,12,0,0">
               <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0"><TextBlock Text="X @ 10" Foreground="#94A2B8" HorizontalAlignment="Center"/><TextBlock x:Name="StatX" Text="12.7" FontSize="17" HorizontalAlignment="Center"/></StackPanel>

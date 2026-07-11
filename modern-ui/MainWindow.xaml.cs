@@ -59,6 +59,14 @@ namespace RawAccelModern
         private readonly HashSet<string> ignoredDeviceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private int lastMouseDx;
         private int lastMouseDy;
+        private string activeCurveHandle;
+        private Point curveDragStart;
+        private double curveDragStartValue;
+        private int lastCurveDragRenderTick;
+        private readonly List<Point> lutWorkingPoints = new List<Point>();
+        private int activeLutPointIndex = -1;
+        private int selectedLutPointIndex = -1;
+        private Point lutDragStartValue;
 
         private static readonly Dictionary<string, string> PortugueseText = new Dictionary<string, string>
         {
@@ -184,6 +192,21 @@ namespace RawAccelModern
             { "Apply", "Aplicar" },
             { "Reset", "Redefinir" },
             { "Sensitivity", "Sensibilidade" },
+            { "Drag Natural handles, then press Apply", "Arraste os controles Natural e depois clique em Aplicar" },
+            { "Drag LUT points freely, then press Apply", "Arraste livremente os pontos LUT e depois clique em Aplicar" },
+            { "Convert this curve to LUT for free editing", "Converta esta curva para LUT para editar livremente" },
+            { "Pending — press Apply", "Pendente — clique em Aplicar" },
+            { "Curve Start", "Início da curva" },
+            { "Curve Rise", "Subida da curva" },
+            { "Curve Limit", "Limite da curva" },
+            { "Convert to Free Edit (LUT)", "Converter para edição livre (LUT)" },
+            { "Free Curve Editor (LUT)", "Editor de curva livre (LUT)" },
+            { "Drag points in any direction. Values are saved only after Apply.", "Arraste os pontos em qualquer direção. Os valores são salvos somente após Aplicar." },
+            { "editable points", "pontos editáveis" },
+            { "Add Point", "Adicionar ponto" },
+            { "Remove Selected", "Remover selecionado" },
+            { "Free Edit Conversion", "Conversão para edição livre" },
+            { "The current curve will be converted to LUT points. Its shape will be preserved approximately, but the original mathematical mode will be replaced. Continue?", "A curva atual será convertida em pontos LUT. Seu formato será preservado aproximadamente, mas o modo matemático original será substituído. Continuar?" },
             { "Accelerated Sensitivity", "Sensibilidade acelerada" },
             { "Last Mouse Move", "Último movimento do mouse" },
             { "Ratio", "Proporção" },
@@ -265,6 +288,7 @@ namespace RawAccelModern
             { "Y / X Ratio", "Changes vertical sensitivity relative to horizontal sensitivity, equally for up and down. 1.05 makes vertical output about 5% faster." },
             { "Rotation", "Rotates the reference axes used by horizontal, vertical and directional adjustments. Keep it at 0 unless your natural mouse movement is tilted." },
             { "Curve / Profile", "Selects the mathematical acceleration curve. Natural now has a dedicated editor for Decay Rate, Input Offset and Limit. No Accel hides curve parameters. Other modes preserve their stored parameters until their dedicated editors are implemented." },
+            { "Convert to Free Edit (LUT)", "Samples the curve currently visible and converts it to editable LUT points. This works from Natural, Classic, Jump, Synchronous, Power or LUT. Arbitrary point editing cannot remain mathematically Classic or Natural, so conversion requires confirmation and is not saved until Apply." },
             { "Gain", "When enabled, the selected shape is applied as gain—the rate at which output velocity changes—instead of directly as sensitivity. This can significantly change the feel of the same curve." },
             { "Decay Rate", "Controls how quickly the Natural curve rises toward its limit after acceleration begins. Higher values make the transition happen sooner and more aggressively." },
             { "Input Offset", "Sets the input speed threshold before acceleration begins. Below this speed, movement stays close to the base sensitivity." },
@@ -299,6 +323,7 @@ namespace RawAccelModern
             { "Y / X Ratio", "Altera a sensibilidade vertical em relação à horizontal, igualmente para cima e para baixo. 1,05 deixa a saída vertical aproximadamente 5% mais rápida." },
             { "Rotation", "Gira os eixos de referência usados nos ajustes horizontais, verticais e direcionais. Mantenha em 0, exceto se o movimento natural da sua mão for inclinado." },
             { "Curve / Profile", "Seleciona a curva matemática de aceleração. Natural agora possui um editor dedicado para Taxa de decaimento, Deslocamento de entrada e Limite. Sem aceleração oculta os parâmetros da curva. Os outros modos preservam seus parâmetros até receberem editores dedicados." },
+            { "Convert to Free Edit (LUT)", "Amostra a curva atualmente visível e a converte em pontos LUT editáveis. Funciona a partir de Natural, Clássico, Salto, Síncrono, Potência ou LUT. Uma edição arbitrária não pode continuar matematicamente Clássica ou Natural, por isso a conversão exige confirmação e só é salva após Aplicar." },
             { "Gain", "Quando ativado, o formato selecionado é aplicado como ganho — a taxa de mudança da velocidade de saída — em vez de ser aplicado diretamente como sensibilidade. Isso pode mudar bastante a sensação da mesma curva." },
             { "Decay Rate", "Controla a rapidez com que a curva Natural sobe em direção ao limite após o início da aceleração. Valores maiores tornam a transição mais rápida e agressiva." },
             { "Input Offset", "Define a velocidade de entrada necessária para a aceleração começar. Abaixo dessa velocidade, o movimento permanece próximo da sensibilidade base." },
@@ -833,6 +858,7 @@ namespace RawAccelModern
             GainToggle.IsChecked = accel != null && accel["Gain / Velocity"] != null && accel["Gain / Velocity"].Value<bool>();
 
             string mode = accel == null || accel["mode"] == null ? "natural" : accel["mode"].ToString();
+            LoadLutWorkingPoints(accel, mode, profile["name"] == null ? null : profile["name"].ToString());
             SelectMode(mode);
             UpdateCurveEditor();
             StatRatio.Text = ratio.ToString("0.00", CultureInfo.InvariantCulture);
@@ -908,25 +934,37 @@ namespace RawAccelModern
 
         private void ModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase) && lutWorkingPoints.Count < 2)
+                InitializeIdentityLutPoints();
             UpdateCurveEditor();
             if (!loading && settings != null && IsLoaded) DrawChart();
         }
 
         private void UpdateCurveEditor()
         {
-            if (CurveParametersCard == null || CurveModeNotice == null || ModeBox == null) return;
+            if (CurveParametersCard == null || CurveModeNotice == null || LutEditorCard == null || ModeBox == null) return;
             string mode = SelectedMode();
             if (String.Equals(mode, "natural", StringComparison.OrdinalIgnoreCase))
             {
                 CurveParametersCard.Visibility = Visibility.Visible;
                 CurveModeNotice.Visibility = Visibility.Collapsed;
+                LutEditorCard.Visibility = Visibility.Collapsed;
                 CurveParameterTitle.Text = T("Natural Curve Parameters");
                 CurveParameterDescription.Text = T("Smooth progressive curve with a configurable start, rise and ceiling");
+                if (CurveDragHint != null) CurveDragHint.Text = T("Drag Natural handles, then press Apply");
                 return;
             }
 
             CurveParametersCard.Visibility = Visibility.Collapsed;
-            CurveModeNotice.Visibility = Visibility.Visible;
+            LutEditorCard.Visibility = String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
+            CurveModeNotice.Visibility = String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) ? Visibility.Collapsed : Visibility.Visible;
+            if (String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase))
+            {
+                if (CurveDragHint != null) CurveDragHint.Text = T("Drag LUT points freely, then press Apply");
+                UpdateLutPointsDisplay();
+                return;
+            }
+            if (CurveDragHint != null) CurveDragHint.Text = T("Convert this curve to LUT for free editing");
             if (String.Equals(mode, "noaccel", StringComparison.OrdinalIgnoreCase))
             {
                 CurveModeNoticeTitle.Text = T("No acceleration parameters");
@@ -938,6 +976,68 @@ namespace RawAccelModern
             string displayName = item == null ? mode : Convert.ToString(item.Content);
             CurveModeNoticeTitle.Text = T("Mode-specific editor pending") + ": " + displayName;
             CurveModeNoticeText.Text = T("Existing parameters are preserved when applying. A dedicated editor will be added in a separate tested stage.");
+        }
+
+        private void LoadLutWorkingPoints(JObject accel, string mode, string profileName)
+        {
+            lutWorkingPoints.Clear();
+            selectedLutPointIndex = -1;
+            activeLutPointIndex = -1;
+            if (accel != null && String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase))
+            {
+                JArray data = accel["data"] as JArray;
+                if (data != null)
+                {
+                    for (int i = 0; i + 1 < data.Count; i += 2)
+                    {
+                        double x;
+                        double y;
+                        if (Double.TryParse(data[i].ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out x) &&
+                            Double.TryParse(data[i + 1].ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out y) &&
+                            !Double.IsNaN(x) && !Double.IsNaN(y) && x >= 0 && y >= 0)
+                            lutWorkingPoints.Add(new Point(x, y));
+                    }
+                }
+            }
+            if (String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) && lutWorkingPoints.Count < 2)
+                InitializeIdentityLutPoints();
+            NormalizeLutPoints();
+            UpdateLutPointsDisplay();
+        }
+
+        private void InitializeIdentityLutPoints()
+        {
+            lutWorkingPoints.Clear();
+            for (int i = 0; i <= 8; i++)
+            {
+                double x = i * 5.0;
+                lutWorkingPoints.Add(new Point(x, x));
+            }
+            selectedLutPointIndex = -1;
+            UpdateLutPointsDisplay();
+        }
+
+        private void NormalizeLutPoints()
+        {
+            List<Point> ordered = lutWorkingPoints.Where(point => point.X >= 0 && point.Y >= 0)
+                .OrderBy(point => point.X).Take(64).ToList();
+            lutWorkingPoints.Clear();
+            foreach (Point point in ordered)
+            {
+                if (lutWorkingPoints.Count > 0 && Math.Abs(lutWorkingPoints[lutWorkingPoints.Count - 1].X - point.X) < 0.001)
+                    lutWorkingPoints[lutWorkingPoints.Count - 1] = point;
+                else lutWorkingPoints.Add(point);
+            }
+        }
+
+        private void UpdateLutPointsDisplay()
+        {
+            if (LutPointsBox == null || LutPointsSummary == null) return;
+            LutPointsBox.Text = String.Join("; ", lutWorkingPoints.Select(point =>
+                point.X.ToString("0.##", CultureInfo.InvariantCulture) + "," + point.Y.ToString("0.##", CultureInfo.InvariantCulture)).ToArray());
+            LutPointsSummary.Text = lutWorkingPoints.Count.ToString(CultureInfo.InvariantCulture) + " " + T("editable points");
+            if (RemoveLutPointButton != null)
+                RemoveLutPointButton.IsEnabled = selectedLutPointIndex > 0 && selectedLutPointIndex < lutWorkingPoints.Count - 1 && lutWorkingPoints.Count > 2;
         }
 
         private double ReadNumber(TextBox box, string label)
@@ -2133,6 +2233,18 @@ namespace RawAccelModern
                 accel["inputOffset"] = ReadNumber(OffsetBox, "Input Offset");
                 accel["limit"] = ReadNumber(LimitBox, "Limit");
             }
+            else if (String.Equals(selectedMode, "lut", StringComparison.OrdinalIgnoreCase))
+            {
+                if (lutWorkingPoints.Count < 2)
+                    throw new InvalidDataException(T("The configuration was rejected by the original Raw Accel engine."));
+                JArray data = new JArray();
+                foreach (Point point in lutWorkingPoints)
+                {
+                    data.Add(point.X);
+                    data.Add(point.Y);
+                }
+                accel["data"] = data;
+            }
             if (domain != null) domain["y"] = ReadNumber(AnisotropyBox, "Anisotropy");
             if (range != null) range["y"] = ReadNumber(VerticalRangeBox, "Vertical Accel Strength");
             return edited;
@@ -2198,6 +2310,194 @@ namespace RawAccelModern
             DrawChart();
         }
 
+        private void ConvertToFreeEdit_Click(object sender, RoutedEventArgs e)
+        {
+            if (settings == null) return;
+            if (MessageBox.Show(this, T("The current curve will be converted to LUT points. Its shape will be preserved approximately, but the original mathematical mode will be replaced. Continue?"),
+                T("Free Edit Conversion"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            List<double> sampled = CalculateCurve();
+            if (sampled == null || sampled.Count < 2) return;
+            double sensitivity = Math.Max(0.0001, ParseOrDefault(SensBox.Text, 1));
+            lutWorkingPoints.Clear();
+            for (int i = 0; i <= 8; i++)
+            {
+                double input = i * 5.0;
+                int sampleIndex = Math.Min(sampled.Count - 1, (int)Math.Round((sampled.Count - 1) * input / 40.0));
+                double output = input == 0 ? 0 : input * sampled[sampleIndex] / sensitivity;
+                lutWorkingPoints.Add(new Point(input, Math.Max(0, output)));
+            }
+            selectedLutPointIndex = -1;
+            SelectMode("lut");
+            UpdateLutPointsDisplay();
+            MarkCurvePendingAndRedraw();
+        }
+
+        private void AddLutPoint_Click(object sender, RoutedEventArgs e)
+        {
+            if (lutWorkingPoints.Count < 2) InitializeIdentityLutPoints();
+            if (lutWorkingPoints.Count >= 64) return;
+            int gapIndex = 0;
+            double largestGap = Double.MinValue;
+            for (int i = 0; i < lutWorkingPoints.Count - 1; i++)
+            {
+                double gap = Math.Min(40, lutWorkingPoints[i + 1].X) - Math.Max(0, lutWorkingPoints[i].X);
+                if (gap > largestGap)
+                {
+                    largestGap = gap;
+                    gapIndex = i;
+                }
+            }
+            if (largestGap < 0.5) return;
+            Point first = lutWorkingPoints[gapIndex];
+            Point second = lutWorkingPoints[gapIndex + 1];
+            lutWorkingPoints.Insert(gapIndex + 1, new Point((first.X + second.X) / 2.0, (first.Y + second.Y) / 2.0));
+            selectedLutPointIndex = gapIndex + 1;
+            UpdateLutPointsDisplay();
+            MarkCurvePendingAndRedraw();
+        }
+
+        private void RemoveLutPoint_Click(object sender, RoutedEventArgs e)
+        {
+            if (selectedLutPointIndex <= 0 || selectedLutPointIndex >= lutWorkingPoints.Count - 1 || lutWorkingPoints.Count <= 2) return;
+            lutWorkingPoints.RemoveAt(selectedLutPointIndex);
+            selectedLutPointIndex = -1;
+            UpdateLutPointsDisplay();
+            MarkCurvePendingAndRedraw();
+        }
+
+        private void MarkCurvePendingAndRedraw()
+        {
+            DriverStatus.Text = T("Pending — press Apply");
+            DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+            DrawChart();
+        }
+
+        private void CurveDragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Ellipse handle = sender as Ellipse;
+            string handleName = handle == null ? null : Convert.ToString(handle.Tag);
+            if (String.IsNullOrEmpty(handleName)) return;
+            if (handleName.StartsWith("lut:", StringComparison.Ordinal))
+            {
+                int pointIndex;
+                if (!String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase) ||
+                    !Int32.TryParse(handleName.Substring(4), out pointIndex) || pointIndex <= 0 || pointIndex >= lutWorkingPoints.Count) return;
+                activeCurveHandle = "lut";
+                activeLutPointIndex = pointIndex;
+                selectedLutPointIndex = pointIndex;
+                lutDragStartValue = lutWorkingPoints[pointIndex];
+                UpdateLutPointsDisplay();
+            }
+            else
+            {
+                if (!String.Equals(SelectedMode(), "natural", StringComparison.OrdinalIgnoreCase)) return;
+                activeCurveHandle = handleName;
+                curveDragStartValue = handleName == "offset" ? ParseOrDefault(OffsetBox.Text, 0) :
+                    handleName == "decay" ? ParseOrDefault(DecayBox.Text, 1) : ParseOrDefault(LimitBox.Text, 1);
+            }
+            curveDragStart = e.GetPosition(ChartCanvas);
+            lastCurveDragRenderTick = Environment.TickCount;
+            ChartCanvas.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void ChartCanvas_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase) || lutWorkingPoints.Count < 2) return;
+            Point position = e.GetPosition(ChartCanvas);
+            double sensitivity = Math.Max(0.0001, ParseOrDefault(SensBox.Text, 1));
+            int nearest = -1;
+            double nearestDistance = 22 * 22;
+            for (int i = 1; i < lutWorkingPoints.Count; i++)
+            {
+                Point point = lutWorkingPoints[i];
+                if (point.X <= 0 || point.X > 40) continue;
+                double ratio = point.Y / point.X * sensitivity;
+                double x = chartPlotLeft + point.X / 40.0 * chartPlotWidth;
+                double y = chartPlotTop + chartPlotHeight - (ratio - chartYMin) / (chartYMax - chartYMin) * chartPlotHeight;
+                double distance = (position.X - x) * (position.X - x) + (position.Y - y) * (position.Y - y);
+                if (distance <= nearestDistance)
+                {
+                    nearest = i;
+                    nearestDistance = distance;
+                }
+            }
+            if (nearest < 0) return;
+            activeCurveHandle = "lut";
+            activeLutPointIndex = nearest;
+            selectedLutPointIndex = nearest;
+            lutDragStartValue = lutWorkingPoints[nearest];
+            curveDragStart = position;
+            lastCurveDragRenderTick = Environment.TickCount;
+            UpdateLutPointsDisplay();
+            ChartCanvas.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void ChartCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (String.IsNullOrEmpty(activeCurveHandle) || e.LeftButton != MouseButtonState.Pressed || chartPlotWidth <= 0 || chartPlotHeight <= 0) return;
+            Point position = e.GetPosition(ChartCanvas);
+            if (activeCurveHandle == "lut" && activeLutPointIndex > 0 && activeLutPointIndex < lutWorkingPoints.Count)
+            {
+                double minimumX = lutWorkingPoints[activeLutPointIndex - 1].X + 0.25;
+                double maximumX = activeLutPointIndex + 1 < lutWorkingPoints.Count
+                    ? lutWorkingPoints[activeLutPointIndex + 1].X - 0.25 : 40.0;
+                double input = Math.Max(minimumX, Math.Min(maximumX, (position.X - chartPlotLeft) / chartPlotWidth * 40.0));
+                double sensitivity = Math.Max(0.0001, ParseOrDefault(SensBox.Text, 1));
+                double startingRatio = lutDragStartValue.X <= 0 ? sensitivity : lutDragStartValue.Y / lutDragStartValue.X * sensitivity;
+                double verticalTravel = position.Y - curveDragStart.Y;
+                double responseRange = Math.Max(2, startingRatio * 2.0);
+                double ratio = Math.Max(0.01, startingRatio - verticalTravel / chartPlotHeight * responseRange);
+                lutWorkingPoints[activeLutPointIndex] = new Point(input, input * ratio / sensitivity);
+                UpdateLutPointsDisplay();
+            }
+            else if (activeCurveHandle == "offset")
+            {
+                double offset = (position.X - chartPlotLeft) / chartPlotWidth * 40.0;
+                OffsetBox.Text = FormatNumber(Math.Max(0, Math.Min(40, offset)));
+            }
+            else if (activeCurveHandle == "decay")
+            {
+                double horizontalTravel = position.X - curveDragStart.X;
+                double responseWidth = Math.Max(80, chartPlotWidth / 4.0);
+                double decay = curveDragStartValue * Math.Exp(-horizontalTravel / responseWidth);
+                DecayBox.Text = FormatNumber(Math.Max(0.01, Math.Min(20, decay)));
+            }
+            else if (activeCurveHandle == "limit")
+            {
+                double verticalTravel = position.Y - curveDragStart.Y;
+                double responseRange = Math.Max(5, curveDragStartValue * 2.0);
+                double limit = curveDragStartValue - verticalTravel / chartPlotHeight * responseRange;
+                LimitBox.Text = FormatNumber(Math.Max(0, Math.Min(100, limit)));
+            }
+
+            DriverStatus.Text = T("Pending — press Apply");
+            DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+            int now = Environment.TickCount;
+            if (unchecked((uint)(now - lastCurveDragRenderTick)) >= 24)
+            {
+                lastCurveDragRenderTick = now;
+                DrawChart();
+            }
+        }
+
+        private void ChartCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (String.IsNullOrEmpty(activeCurveHandle)) return;
+            activeCurveHandle = null;
+            activeLutPointIndex = -1;
+            ChartCanvas.ReleaseMouseCapture();
+            DrawChart();
+            e.Handled = true;
+        }
+
+        private void ChartCanvas_LostMouseCapture(object sender, MouseEventArgs e)
+        {
+            activeCurveHandle = null;
+            activeLutPointIndex = -1;
+        }
+
         private void DrawChart()
         {
             if (!IsLoaded || ChartCanvas.ActualWidth < 200 || ChartCanvas.ActualHeight < 150 || settings == null) return;
@@ -2260,6 +2560,8 @@ namespace RawAccelModern
             line.Stroke = new SolidColorBrush(Color.FromRgb(21, 148, 251));
             line.StrokeThickness = 3;
             ChartCanvas.Children.Add(line);
+            if (String.Equals(SelectedMode(), "natural", StringComparison.OrdinalIgnoreCase)) AddNaturalCurveHandles(values);
+            else if (String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase)) AddLutCurveHandles();
             PositionMouseMarker();
 
             AddLabel(T("Input Speed (counts/ms)"), left + plotWidth / 2 - 100, height - 32, 200, TextAlignment.Center, "#DCE6F4");
@@ -2275,6 +2577,112 @@ namespace RawAccelModern
             StatOutput.Text = values[atTen].ToString("0.00", CultureInfo.InvariantCulture);
             StatX.Text = (10 * values[atTen]).ToString("0.0", CultureInfo.InvariantCulture);
             StatY.Text = (10 * values[atTen] * ParseOrDefault(RatioBox.Text, 1)).ToString("0.0", CultureInfo.InvariantCulture);
+        }
+
+        private void AddNaturalCurveHandles(List<double> values)
+        {
+            if (values == null || values.Count < 2 || chartPlotWidth <= 0 || chartPlotHeight <= 0) return;
+            double offset = Math.Max(0, Math.Min(40, ParseOrDefault(OffsetBox.Text, 0)));
+            double decay = Math.Max(0.01, Math.Min(20, ParseOrDefault(DecayBox.Text, 1)));
+            double riseInput = Math.Max(offset + 1, Math.Min(39, offset + 10.0 / decay));
+            AddNaturalCurveHandle("offset", "Curve Start", offset, CurveValueAtInput(values, offset), "#FFBC52");
+            AddNaturalCurveHandle("decay", "Curve Rise", riseInput, CurveValueAtInput(values, riseInput), "#42D6FF");
+            AddNaturalCurveHandle("limit", "Curve Limit", 40, CurveValueAtInput(values, 40), "#D87CFF");
+        }
+
+        private void AddLutCurveHandles()
+        {
+            if (lutWorkingPoints.Count < 2 || chartPlotWidth <= 0 || chartPlotHeight <= 0) return;
+            double sensitivity = Math.Max(0.0001, ParseOrDefault(SensBox.Text, 1));
+            for (int i = 1; i < lutWorkingPoints.Count; i++)
+            {
+                Point point = lutWorkingPoints[i];
+                if (point.X <= 0 || point.X > 40) continue;
+                double ratio = point.Y / point.X * sensitivity;
+                double x = chartPlotLeft + point.X / 40.0 * chartPlotWidth;
+                double y = chartPlotTop + chartPlotHeight - (ratio - chartYMin) / (chartYMax - chartYMin) * chartPlotHeight;
+                y = Math.Max(chartPlotTop, Math.Min(chartPlotTop + chartPlotHeight, y));
+                bool selected = i == selectedLutPointIndex;
+                Ellipse handle = new Ellipse
+                {
+                    Width = selected ? 19 : 15,
+                    Height = selected ? 19 : 15,
+                    Fill = new SolidColorBrush(selected ? Color.FromRgb(216, 124, 255) : Color.FromRgb(66, 214, 255)),
+                    Stroke = Brushes.White,
+                    StrokeThickness = 2,
+                    Cursor = Cursors.SizeAll,
+                    Tag = "lut:" + i.ToString(CultureInfo.InvariantCulture),
+                    ToolTip = point.X.ToString("0.##", CultureInfo.InvariantCulture) + " → " + point.Y.ToString("0.##", CultureInfo.InvariantCulture)
+                };
+                handle.MouseLeftButtonDown += CurveDragHandle_MouseLeftButtonDown;
+                Panel.SetZIndex(handle, 42);
+                Canvas.SetLeft(handle, x - handle.Width / 2);
+                Canvas.SetTop(handle, y - handle.Height / 2);
+                ChartCanvas.Children.Add(handle);
+                if (selected)
+                {
+                    TextBlock label = new TextBlock
+                    {
+                        Text = point.X.ToString("0.##", CultureInfo.InvariantCulture) + ", " + point.Y.ToString("0.##", CultureInfo.InvariantCulture),
+                        Foreground = new SolidColorBrush(Color.FromRgb(216, 124, 255)),
+                        FontSize = 10,
+                        FontWeight = FontWeights.SemiBold,
+                        IsHitTestVisible = false
+                    };
+                    label.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+                    Canvas.SetLeft(label, Math.Max(chartPlotLeft, Math.Min(chartPlotLeft + chartPlotWidth - label.DesiredSize.Width, x + 12)));
+                    Canvas.SetTop(label, Math.Max(chartPlotTop, y - 25));
+                    Panel.SetZIndex(label, 41);
+                    ChartCanvas.Children.Add(label);
+                }
+            }
+        }
+
+        private double CurveValueAtInput(List<double> values, double input)
+        {
+            double position = Math.Max(0, Math.Min(40, input)) / 40.0 * (values.Count - 1);
+            int lower = (int)Math.Floor(position);
+            int upper = Math.Min(values.Count - 1, lower + 1);
+            double fraction = position - lower;
+            return values[lower] * (1 - fraction) + values[upper] * fraction;
+        }
+
+        private void AddNaturalCurveHandle(string name, string title, double input, double ratio, string color)
+        {
+            double x = chartPlotLeft + input / 40.0 * chartPlotWidth;
+            double y = chartPlotTop + chartPlotHeight - (ratio - chartYMin) / (chartYMax - chartYMin) * chartPlotHeight;
+            y = Math.Max(chartPlotTop, Math.Min(chartPlotTop + chartPlotHeight, y));
+            Ellipse handle = new Ellipse
+            {
+                Width = 17,
+                Height = 17,
+                Fill = (SolidColorBrush)new BrushConverter().ConvertFrom(color),
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                Cursor = Cursors.Hand,
+                Tag = name,
+                ToolTip = T(title) + ": " + (name == "offset" ? OffsetBox.Text : name == "decay" ? DecayBox.Text : LimitBox.Text)
+            };
+            handle.MouseLeftButtonDown += CurveDragHandle_MouseLeftButtonDown;
+            Panel.SetZIndex(handle, 40);
+            Canvas.SetLeft(handle, x - handle.Width / 2);
+            Canvas.SetTop(handle, y - handle.Height / 2);
+            ChartCanvas.Children.Add(handle);
+
+            TextBlock label = new TextBlock
+            {
+                Text = T(title),
+                Foreground = (SolidColorBrush)new BrushConverter().ConvertFrom(color),
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                IsHitTestVisible = false
+            };
+            label.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+            double labelLeft = name == "limit" ? x - label.DesiredSize.Width - 12 : x + 11;
+            Canvas.SetLeft(label, Math.Max(chartPlotLeft, Math.Min(chartPlotLeft + chartPlotWidth - label.DesiredSize.Width, labelLeft)));
+            Canvas.SetTop(label, Math.Max(chartPlotTop, y - 24));
+            Panel.SetZIndex(label, 39);
+            ChartCanvas.Children.Add(label);
         }
 
         private void PositionMouseMarker()
