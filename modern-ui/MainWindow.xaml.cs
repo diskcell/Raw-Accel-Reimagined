@@ -86,12 +86,15 @@ namespace RawAccelModern
             { "All detected devices are ignored.", "Todos os dispositivos detectados estão ignorados." },
             { "Profile Management", "Gerenciamento de perfis" },
             { "Create a clean profile or duplicate the selected profile", "Crie um perfil limpo ou duplique o perfil selecionado" },
+            { "Create, duplicate or rename the selected profile", "Crie, duplique ou renomeie o perfil selecionado" },
             { "Selected profile", "Perfil selecionado" },
             { "New profile name", "Nome do novo perfil" },
             { "Create Clean Profile", "Criar perfil limpo" },
             { "Duplicate Selected", "Duplicar selecionado" },
+            { "Rename Selected", "Renomear selecionado" },
             { "Profile created", "Perfil criado" },
             { "Profile duplicated", "Perfil duplicado" },
+            { "Profile renamed", "Perfil renomeado" },
             { "Profile operation failed", "Falha na operação de perfil" },
             { "Profile name is required.", "O nome do perfil é obrigatório." },
             { "A profile with this name already exists.", "Já existe um perfil com este nome." },
@@ -226,7 +229,8 @@ namespace RawAccelModern
         private static readonly Dictionary<string, string> HelpTextEnglish = new Dictionary<string, string>
         {
             { "Connected Devices", "Lists mouse-capable HID interfaces using the original Raw Accel enumerator. Some keyboards also expose a mouse interface; use Not a Mouse to hide them locally. Refresh and ignore do not edit settings.json. Profile association requires confirmation, backup and complete validation." },
-            { "Profile Management", "Create Clean Profile adds a new Raw Accel default profile with acceleration disabled. Duplicate Selected copies every value from the profile currently selected at the top. Both actions validate the complete configuration, create a backup and apply it to the driver." },
+            { "Profile Management", "Create Clean Profile adds a new Raw Accel default profile with acceleration disabled. Duplicate Selected copies every value from the selected profile. Rename Selected changes its name and updates every device association that uses it. All actions validate the complete configuration, create a backup and apply it to the driver." },
+            { "Rename Selected", "Renames the profile currently selected at the top using the name entered in New profile name. Device associations are updated automatically. The curve values are not changed, and confirmation is required before saving." },
             { "Input Smoothing (ms)", "Smooths the input values used to calculate mouse speed and acceleration. Higher half-life values reduce sensor noise but make acceleration react more slowly. Start between 1 and 3 ms; 0 disables it." },
             { "Sensitivity Smoothing (ms)", "Smooths rapid changes in the acceleration multiplier without directly averaging the final cursor movement. It can make transitions steadier with less latency than output smoothing. Start between 1 and 3 ms; 0 disables it." },
             { "Output Smoothing (ms)", "Averages the final mouse output. This can make movement look smoother, but it adds direct input latency and reduces the immediate connection to the mouse. Keep it at 0 for competitive aiming." },
@@ -256,7 +260,8 @@ namespace RawAccelModern
         private static readonly Dictionary<string, string> HelpTextPortuguese = new Dictionary<string, string>
         {
             { "Connected Devices", "Lista interfaces HID capazes de gerar movimentos de mouse usando o enumerador original do Raw Accel. Alguns teclados também expõem uma interface de mouse; use Não é mouse para ocultá-los localmente. Atualizar e ignorar não editam o settings.json. Associar perfil exige confirmação, backup e validação completa." },
-            { "Profile Management", "Criar perfil limpo adiciona um novo perfil padrão do Raw Accel com aceleração desativada. Duplicar selecionado copia todos os valores do perfil escolhido no topo. As duas ações validam a configuração completa, criam backup e aplicam ao driver." },
+            { "Profile Management", "Criar perfil limpo adiciona um novo perfil padrão do Raw Accel com aceleração desativada. Duplicar selecionado copia todos os valores do perfil escolhido. Renomear selecionado altera o nome e atualiza todas as associações de dispositivos que o utilizam. Todas as ações validam a configuração completa, criam backup e aplicam ao driver." },
+            { "Rename Selected", "Renomeia o perfil escolhido no topo usando o texto informado em Nome do novo perfil. As associações de dispositivos são atualizadas automaticamente. Os valores da curva não são alterados e uma confirmação é exigida antes de salvar." },
             { "Input Smoothing (ms)", "Suaviza os valores de entrada usados para calcular a velocidade e a aceleração do mouse. Tempos maiores reduzem ruídos do sensor, mas fazem a aceleração reagir mais lentamente. Comece entre 1 e 3 ms; 0 desativa." },
             { "Sensitivity Smoothing (ms)", "Suaviza mudanças rápidas no multiplicador de aceleração sem calcular uma média direta do movimento final. Pode estabilizar as transições com menos latência que a suavização de saída. Comece entre 1 e 3 ms; 0 desativa." },
             { "Output Smoothing (ms)", "Calcula uma média da saída final do mouse. O movimento pode parecer mais suave, mas isso adiciona latência direta e reduz a resposta imediata. Mantenha em 0 para jogos competitivos." },
@@ -1409,6 +1414,87 @@ namespace RawAccelModern
         private void DuplicateProfile_Click(object sender, RoutedEventArgs e)
         {
             CreateOrDuplicateProfile(true);
+        }
+
+        private void RenameProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string backupPath = null;
+            string previousProfile = ProfileBox.SelectedItem == null ? null : ProfileBox.SelectedItem.ToString();
+            try
+            {
+                if (String.IsNullOrWhiteSpace(previousProfile))
+                    throw new InvalidDataException(T("The selected profile was not found."));
+
+                string newName = ValidateNewProfileName(NewProfileNameBox.Text);
+                JObject edited = JObject.Parse(File.ReadAllText(settingsPath));
+                JArray profiles = edited["profiles"] as JArray;
+                int index = ProfileBox.SelectedIndex;
+                if (profiles == null || index < 0 || index >= profiles.Count)
+                    throw new InvalidDataException(T("The selected profile was not found."));
+
+                JObject selectedProfile = profiles[index] as JObject;
+                if (selectedProfile == null || selectedProfile["name"] == null)
+                    throw new InvalidDataException(T("The selected profile was not found."));
+                string oldName = selectedProfile["name"].ToString();
+                if (String.Equals(oldName, newName, StringComparison.Ordinal))
+                    throw new InvalidDataException(T("A profile with this name already exists."));
+                if (profiles.OfType<JObject>().Where((profile, profileIndex) => profileIndex != index).Any(profile =>
+                    profile["name"] != null && String.Equals(profile["name"].ToString(), newName, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidDataException(T("A profile with this name already exists."));
+
+                JArray devices = edited["devices"] as JArray;
+                List<JObject> associatedDevices = devices == null
+                    ? new List<JObject>()
+                    : devices.OfType<JObject>().Where(device => device["profile"] != null &&
+                        String.Equals(device["profile"].ToString(), oldName, StringComparison.Ordinal)).ToList();
+
+                string associationNote = associatedDevices.Count == 0
+                    ? String.Empty
+                    : (currentLanguage == "pt-BR"
+                        ? "\n\n" + associatedDevices.Count + " associação(ões) de dispositivo também será(ão) atualizada(s)."
+                        : "\n\n" + associatedDevices.Count + " device association(s) will also be updated.");
+                string confirmation = currentLanguage == "pt-BR"
+                    ? "Renomear o perfil \"" + oldName + "\" para \"" + newName + "\"?" + associationNote
+                    : "Rename profile \"" + oldName + "\" to \"" + newName + "\"?" + associationNote;
+                if (MessageBox.Show(this, confirmation, T("Profile Management"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
+
+                selectedProfile["name"] = newName;
+                foreach (JObject device in associatedDevices) device["profile"] = newName;
+
+                Tuple<DriverConfig, string> validation = DriverConfig.Convert(edited.ToString(Formatting.None));
+                if (validation == null || validation.Item1 == null)
+                    throw new InvalidDataException(T("The original engine rejected the configuration.") + " " + (validation == null ? String.Empty : validation.Item2));
+
+                string backupDirectory = IOPath.Combine(rootDirectory, "backups", "modern-ui");
+                Directory.CreateDirectory(backupDirectory);
+                backupPath = IOPath.Combine(backupDirectory, "profile-rename-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + ".json");
+                File.Copy(settingsPath, backupPath, false);
+                File.WriteAllText(settingsPath, edited.ToString(Formatting.Indented));
+                int exitCode = RunSettingsWriter();
+                if (exitCode != 0) throw new InvalidOperationException("writer.exe returned code " + exitCode + ".");
+
+                NewProfileNameBox.Clear();
+                LoadSettings(newName);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile renamed", true);
+                DriverStatus.Text = T("Active");
+                DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
+            }
+            catch (Exception ex)
+            {
+                if (backupPath != null && File.Exists(backupPath))
+                {
+                    File.Copy(backupPath, settingsPath, true);
+                    try { RunSettingsWriter(); } catch { }
+                }
+                if (File.Exists(settingsPath)) LoadSettings(previousProfile);
+                LoadAdvancedSettings();
+                RefreshConnectedDevices();
+                SetAdvancedDriverStatus("Profile operation failed", false);
+                MessageBox.Show(this, ex.Message, T("Profile Management"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void CreateOrDuplicateProfile(bool duplicateSelected)
