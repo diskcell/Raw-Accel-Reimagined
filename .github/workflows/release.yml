@@ -1,0 +1,43 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -ne "tag") {
+            throw "Run this workflow from a vMAJOR.MINOR.PATCH tag."
+          }
+          "RELEASE_VERSION=${{ github.ref_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build release package
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Version $env:RELEASE_VERSION
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:RELEASE_VERSION `
+            "artifacts/Raw-Accel-Reimagined-Windows-x64.zip" `
+            "artifacts/Raw-Accel-Reimagined-Windows-x64.zip.sha256" `
+            --verify-tag `
+            --generate-notes `
+            --title "Raw Accel Reimagined $env:RELEASE_VERSION"

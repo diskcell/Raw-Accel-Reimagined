@@ -19,6 +19,9 @@ modern-ui/branding/BuildBrandAssets.exe
 modern-ui/branding/raw-accel-reimagined-chroma.png
 modern-ui/preview*.png
 modern-ui/rawaccel-modern.ico
+updater/bin/
+updater/obj/
+artifacts/
 
 # IDE and OS files
 .vs/

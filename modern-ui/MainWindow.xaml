@@ -222,7 +222,7 @@
         <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="24,0,0,0" VerticalAlignment="Center">
           <Image Source="branding/raw-accel-reimagined-logo.png" Width="46" Height="46" Stretch="Uniform" Margin="0,0,14,0" />
           <TextBlock Text="Raw Accel Reimagined" FontSize="21" FontWeight="SemiBold" />
-          <TextBlock Text="v1.7.0" Foreground="#8391A7" Margin="14,5,0,0" />
+          <TextBlock x:Name="AppVersionText" Text="v1.8.0" Foreground="#8391A7" Margin="14,5,0,0" />
         </StackPanel>
         <Grid Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="540">
           <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -550,6 +550,21 @@
                 <TextBlock Grid.Row="2" Text="Dark green surfaces with an energetic accent" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
               </Grid>
             </Button>
+
+            <Border Grid.Row="2" Grid.Column="4" Style="{StaticResource Card}" Height="158" Margin="0">
+              <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="42"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Application Updates" FontSize="18" FontWeight="SemiBold" />
+                  <Ellipse Fill="{DynamicResource AccentBrush}" Width="10" Height="10" Margin="10,1,0,0" />
+                </StackPanel>
+                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.0" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
+                <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                  <CheckBox x:Name="AutoUpdateCheckBox" Content=" Automatically check for updates" IsChecked="True" Checked="AutoUpdateCheckBox_Changed" Unchecked="AutoUpdateCheckBox_Changed" />
+                </StackPanel>
+                <Button x:Name="CheckUpdatesButton" Grid.Row="3" Style="{StaticResource ModernButton}" Content="Check for Updates" Click="CheckUpdates_Click" />
+              </Grid>
+            </Border>
           </Grid>
         </ScrollViewer>
       </Grid>

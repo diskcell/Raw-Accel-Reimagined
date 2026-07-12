@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -56,6 +57,8 @@ namespace RawAccelModern
         private WindowState stateBeforeTray = WindowState.Maximized;
         private string currentLanguage = "en";
         private bool changingLanguage;
+        private bool autoCheckUpdates = true;
+        private bool updateCheckRunning;
         private string currentTheme = "dark-blue";
         private readonly HashSet<string> ignoredDeviceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private int lastMouseDx;
@@ -184,6 +187,9 @@ namespace RawAccelModern
             { "A deep purple style with softer highlights", "Um estilo roxo profundo com destaques mais suaves" },
             { "Dark green surfaces with an energetic accent", "Superfícies verde-escuras com um destaque vibrante" },
             { "Help", "Ajuda" },
+            { "Application Updates", "Atualizações do aplicativo" },
+            { "Automatically check for updates", "Verificar atualizações automaticamente" },
+            { "Check for Updates", "Verificar atualizações" },
             { "Acceleration", "Aceleração" },
             { "Last (x, y): (0, 0)", "Último (x, y): (0, 0)" },
             { "Current", "Atual" },
@@ -262,6 +268,9 @@ namespace RawAccelModern
             { "Advanced — Stage 1", "Avançado — Etapa 1" },
             { "This first stage contains only device timing and safe driver controls. Axis tuning, smoothing and per-device profiles will be added and tested separately.", "Esta primeira etapa contém apenas temporização do dispositivo e controles seguros do driver. Ajustes de eixo, suavização e perfis por dispositivo serão adicionados e testados separadamente." },
             { "Ready", "Pronto" },
+            { "Checking for updates...", "Verificando atualizações..." },
+            { "Downloading update...", "Baixando atualização..." },
+            { "Preparing installation...", "Preparando instalação..." },
             { "Active", "Ativo" },
             { "Disabled", "Desativado" },
             { "Configuration error", "Erro de configuração" },
@@ -487,6 +496,7 @@ namespace RawAccelModern
         public MainWindow()
         {
             InitializeComponent();
+            AppVersionText.Text = "v" + UpdateService.CurrentVersionText;
             InitializeTrayIcon();
             rootDirectory = FindRootDirectory();
             settingsPath = IOPath.Combine(rootDirectory, "settings.json");
@@ -593,6 +603,7 @@ namespace RawAccelModern
         private void ApplyLanguage()
         {
             TranslateVisualTree(this);
+            UpdateVersionLabels();
             UpdateLastMoveText();
             if (trayOpenItem != null) trayOpenItem.Text = currentLanguage == "pt-BR" ? "Abrir" : "Open";
             if (trayExitItem != null) trayExitItem.Text = currentLanguage == "pt-BR" ? "Fechar (desativar aceleração)" : "Close (disable acceleration)";
@@ -753,6 +764,150 @@ namespace RawAccelModern
             ApplyLanguage();
         }
 
+        private void UpdateVersionLabels()
+        {
+            if (AppVersionText != null) AppVersionText.Text = "v" + UpdateService.CurrentVersionText;
+            if (InstalledVersionText != null)
+                InstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Versão instalada: " : "Installed version: ") + UpdateService.CurrentVersionText;
+        }
+
+        private void AutoUpdateCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (AutoUpdateCheckBox == null) return;
+            autoCheckUpdates = AutoUpdateCheckBox.IsChecked == true;
+            if (IsLoaded && !String.IsNullOrEmpty(rootDirectory)) SaveReimaginedPreferences();
+        }
+
+        private async void CheckForUpdatesOnStartup()
+        {
+            if (!autoCheckUpdates) return;
+            await Task.Delay(1800);
+            await CheckForUpdatesAsync(false);
+        }
+
+        private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            await CheckForUpdatesAsync(true);
+        }
+
+        private async Task CheckForUpdatesAsync(bool manual)
+        {
+            if (updateCheckRunning) return;
+            updateCheckRunning = true;
+            if (CheckUpdatesButton != null)
+            {
+                CheckUpdatesButton.IsEnabled = false;
+                CheckUpdatesButton.Content = T("Checking for updates...");
+            }
+            if (InstalledVersionText != null) InstalledVersionText.Text = T("Checking for updates...");
+
+            try
+            {
+                UpdateInfo update = await UpdateService.GetLatestReleaseAsync();
+                if (update == null || update.Version.CompareTo(UpdateService.CurrentVersion) <= 0)
+                {
+                    UpdateVersionLabels();
+                    if (manual)
+                    {
+                        string currentMessage = currentLanguage == "pt-BR"
+                            ? "Você já está usando a versão mais recente: " + UpdateService.CurrentVersionText + "."
+                            : "You are already using the latest version: " + UpdateService.CurrentVersionText + ".";
+                        MessageBox.Show(this, currentMessage, "Raw Accel Reimagined", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    return;
+                }
+
+                string versionText = UpdateService.FormatVersion(update.Version);
+                if (InstalledVersionText != null)
+                    InstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Atualização disponível: " : "Update available: ") + versionText;
+
+                string notes = String.IsNullOrWhiteSpace(update.ReleaseNotes) ? String.Empty : update.ReleaseNotes.Trim();
+                if (notes.Length > 900) notes = notes.Substring(0, 900) + "…";
+                string question = currentLanguage == "pt-BR"
+                    ? "A versão " + versionText + " está disponível.\n\nDeseja baixar e instalar agora? O programa será fechado e aberto novamente. Seus perfis e configurações pessoais serão preservados."
+                    : "Version " + versionText + " is available.\n\nDownload and install it now? The application will close and reopen. Your profiles and personal settings will be preserved.";
+                if (!String.IsNullOrEmpty(notes)) question += "\n\n" + notes;
+
+                if (MessageBox.Show(this, question, "Raw Accel Reimagined", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
+
+                if (CheckUpdatesButton != null) CheckUpdatesButton.Content = T("Downloading update...");
+                Progress<int> progress = new Progress<int>(percentage =>
+                {
+                    if (InstalledVersionText != null)
+                        InstalledVersionText.Text = T("Downloading update...") + " " + percentage.ToString(CultureInfo.InvariantCulture) + "%";
+                });
+                UpdateDownload download = await UpdateService.DownloadAsync(update, progress);
+                if (InstalledVersionText != null) InstalledVersionText.Text = T("Preparing installation...");
+                StartUpdateInstaller(download.PackagePath, versionText);
+            }
+            catch (Exception ex)
+            {
+                UpdateVersionLabels();
+                if (manual)
+                {
+                    string failure = currentLanguage == "pt-BR"
+                        ? "Não foi possível verificar ou baixar a atualização.\n\n" + ex.Message
+                        : "The update could not be checked or downloaded.\n\n" + ex.Message;
+                    MessageBox.Show(this, failure, "Raw Accel Reimagined", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            finally
+            {
+                updateCheckRunning = false;
+                if (CheckUpdatesButton != null)
+                {
+                    CheckUpdatesButton.IsEnabled = true;
+                    CheckUpdatesButton.Content = T("Check for Updates");
+                }
+            }
+        }
+
+        private void StartUpdateInstaller(string packagePath, string version)
+        {
+            string installedUpdater = IOPath.Combine(rootDirectory, "RawAccelUpdater.exe");
+            if (!File.Exists(installedUpdater))
+                throw new FileNotFoundException(currentLanguage == "pt-BR"
+                    ? "O componente RawAccelUpdater.exe não foi encontrado."
+                    : "RawAccelUpdater.exe was not found.", installedUpdater);
+
+            string temporaryDirectory = IOPath.Combine(IOPath.GetTempPath(), "RawAccelReimagined-Updater-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(temporaryDirectory);
+            string temporaryUpdater = IOPath.Combine(temporaryDirectory, "RawAccelUpdater.exe");
+            File.Copy(installedUpdater, temporaryUpdater, true);
+
+            string arguments = "--package " + QuoteArgument(packagePath) +
+                " --target " + QuoteArgument(rootDirectory) +
+                " --pid " + Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) +
+                " --launch " + QuoteArgument("RawAccelReimagined.exe") +
+                " --version " + QuoteArgument(version);
+            Process.Start(new ProcessStartInfo(temporaryUpdater, arguments)
+            {
+                WorkingDirectory = temporaryDirectory,
+                UseShellExecute = true
+            });
+
+            allowApplicationExit = true;
+            if (trayIcon != null) trayIcon.Visible = false;
+            Close();
+        }
+
+        private static string QuoteArgument(string value)
+        {
+            return "\"" + (value ?? String.Empty).Replace("\"", "\\\"") + "\"";
+        }
+
+        private void ShowUpdatedConfirmation()
+        {
+            string argument = Environment.GetCommandLineArgs().FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase));
+            if (String.IsNullOrEmpty(argument)) return;
+            string version = argument.Substring("--updated=".Length).Trim('"');
+            string message = currentLanguage == "pt-BR"
+                ? "Raw Accel Reimagined foi atualizado com sucesso para a versão " + version + ".\n\nSeus perfis e configurações foram preservados."
+                : "Raw Accel Reimagined was updated successfully to version " + version + ".\n\nYour profiles and settings were preserved.";
+            MessageBox.Show(this, message, "Raw Accel Reimagined", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -761,6 +916,8 @@ namespace RawAccelModern
                 ApplyTheme(currentTheme, false);
                 LoadSettings(null);
                 LoadAdvancedSettings();
+                if (AutoUpdateCheckBox != null) AutoUpdateCheckBox.IsChecked = autoCheckUpdates;
+                UpdateVersionLabels();
                 DriverStatus.Text = T("Ready");
                 InputRateText.Text = " " + pollRate.ToString(CultureInfo.InvariantCulture) + " Hz";
                 OutputRateText.Text = " " + pollRate.ToString(CultureInfo.InvariantCulture) + " Hz";
@@ -774,6 +931,8 @@ namespace RawAccelModern
                 MessageBox.Show(T("Unable to load the Raw Accel configuration.") + "\n\n" + ex.Message,
                     "Raw Accel Reimagined", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            ShowUpdatedConfirmation();
+            CheckForUpdatesOnStartup();
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -1005,6 +1164,8 @@ namespace RawAccelModern
             if (language != null && language.ToString() == "pt-BR") currentLanguage = "pt-BR";
             JToken theme = reimagined["Theme"] ?? gui["Theme"];
             if (theme != null && ThemePalettes.ContainsKey(theme.ToString())) currentTheme = theme.ToString();
+            JToken autoUpdates = reimagined["AutoCheckUpdates"] ?? gui["AutoCheckUpdates"];
+            if (autoUpdates != null && autoUpdates.Type == JTokenType.Boolean) autoCheckUpdates = autoUpdates.Value<bool>();
             ignoredDeviceIds.Clear();
             JArray ignored = (reimagined["IgnoredDeviceIds"] ?? gui["IgnoredDeviceIds"]) as JArray;
             if (ignored != null)
@@ -1401,6 +1562,7 @@ namespace RawAccelModern
             JObject preferences = File.Exists(path) ? JObject.Parse(File.ReadAllText(path)) : new JObject();
             preferences["Language"] = currentLanguage;
             preferences["Theme"] = currentTheme;
+            preferences["AutoCheckUpdates"] = autoCheckUpdates;
             preferences["IgnoredDeviceIds"] = new JArray(ignoredDeviceIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase));
             File.WriteAllText(path, preferences.ToString(Formatting.None));
         }
