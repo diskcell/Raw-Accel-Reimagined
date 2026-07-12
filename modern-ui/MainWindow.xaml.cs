@@ -216,16 +216,18 @@ namespace RawAccelModern
             { "Apply", "Aplicar" },
             { "Reset", "Redefinir" },
             { "Sensitivity", "Sensibilidade" },
-            { "Drag Natural handles, then press Apply", "Arraste os controles Natural e depois clique em Aplicar" },
-            { "Drag LUT points freely, then press Apply", "Arraste livremente os pontos LUT e depois clique em Aplicar" },
+            { "✓  Save & Apply", "✓  Salvar e aplicar" },
+            { "Save & Apply", "Salvar e aplicar" },
+            { "Drag Natural handles, then press Save & Apply", "Arraste os controles Natural e depois clique em Salvar e aplicar" },
+            { "Drag LUT points freely, then press Save & Apply", "Arraste livremente os pontos LUT e depois clique em Salvar e aplicar" },
             { "Convert this curve to LUT for free editing", "Converta esta curva para LUT para editar livremente" },
-            { "Pending — press Apply", "Pendente — clique em Aplicar" },
+            { "Pending — press Save & Apply", "Pendente — clique em Salvar e aplicar" },
             { "Curve Start", "Início da curva" },
             { "Curve Rise", "Subida da curva" },
             { "Curve Limit", "Limite da curva" },
             { "Convert to Free Edit (LUT)", "Converter para edição livre (LUT)" },
             { "Free Curve Editor (LUT)", "Editor de curva livre (LUT)" },
-            { "Drag points in any direction. Values are saved only after Apply.", "Arraste os pontos em qualquer direção. Os valores são salvos somente após Aplicar." },
+            { "Drag points in any direction. Values are saved only after Save & Apply.", "Arraste os pontos em qualquer direção. Os valores são salvos somente após Salvar e aplicar." },
             { "editable points", "pontos editáveis" },
             { "Add Point", "Adicionar ponto" },
             { "Remove Selected", "Remover selecionado" },
@@ -251,10 +253,11 @@ namespace RawAccelModern
             { "DPI normalization changes the speed unit used by the curve. Polling rate should remain 0 unless automatic timing causes stutter. These settings do not change the acceleration formulas.", "A normalização de DPI altera a unidade de velocidade usada pela curva. Mantenha o polling em 0, exceto se a detecção automática causar travamentos. Estas opções não alteram as fórmulas de aceleração." },
             { "Apply Device Settings", "Aplicar configurações do dispositivo" },
             { "Driver Control", "Controle do driver" },
-            { "Communication and profile activation", "Comunicação e ativação do perfil" },
+            { "Driver & Recovery", "Driver e recuperação" },
+            { "Check the driver or reapply settings already saved on disk", "Verifique o driver ou reaplique as configurações já salvas no disco" },
             { "Not tested", "Não testado" },
-            { "Test Driver Communication", "Testar comunicação do driver" },
-            { "Apply Current Profile", "Aplicar perfil atual" },
+            { "Test Driver Connection", "Testar conexão do driver" },
+            { "Reapply Saved Configuration", "Reaplicar configuração salva" },
             { "Disable Acceleration", "Desativar aceleração" },
             { "Advanced — Stage 1", "Avançado — Etapa 1" },
             { "This first stage contains only device timing and safe driver controls. Axis tuning, smoothing and per-device profiles will be added and tested separately.", "Esta primeira etapa contém apenas temporização do dispositivo e controles seguros do driver. Ajustes de eixo, suavização e perfis por dispositivo serão adicionados e testados separadamente." },
@@ -265,7 +268,7 @@ namespace RawAccelModern
             { "Apply failed", "Falha ao aplicar" },
             { "Connected — acceleration active", "Conectado — aceleração ativa" },
             { "Connected — acceleration disabled", "Conectado — aceleração desativada" },
-            { "Connected — current profile applied", "Conectado — perfil atual aplicado" },
+            { "Connected — saved configuration reapplied", "Conectado — configuração salva reaplicada" },
             { "Device settings applied", "Configurações do dispositivo aplicadas" },
             { "Values reloaded from settings.json", "Valores recarregados do settings.json" },
             { "Device settings were not applied", "As configurações do dispositivo não foram aplicadas" },
@@ -323,8 +326,8 @@ namespace RawAccelModern
             { "Polling Rate (Hz)", "Defines the expected mouse report rate. Leave it at 0 for automatic detection. Set a manual value only when automatic timing causes stutter or inconsistent acceleration." },
             { "Use a constant interval based on polling rate", "Forces calculations to use a fixed time interval derived from the configured polling rate. It requires a manual polling rate and is mainly a troubleshooting option." },
             { "Disable acceleration for default devices", "Prevents acceleration on devices that do not have a specific device profile. Enable it only when you want Raw Accel active exclusively on configured devices." },
-            { "Test Driver Communication", "Checks whether the application can read the active configuration from the Raw Accel driver. It does not change your profile." },
-            { "Apply Current Profile", "Sends the current settings.json profile to the driver again. Use it after external edits or if the driver is active with an older configuration." },
+            { "Test Driver Connection", "Checks whether the application can read the active configuration from the Raw Accel driver. It does not save or change your profile." },
+            { "Reapply Saved Configuration", "Sends the configuration already stored in settings.json to the driver again. It does not save unsaved fields currently open on Charts. Use Save & Apply there when you change values." },
             { "Disable Acceleration", "Deactivates acceleration in the driver immediately. The saved profile remains available and can be applied again later." },
             { "Left / Right Ratio", "Changes leftward sensitivity relative to rightward sensitivity. 1.00 keeps both equal; 1.05 makes left movement about 5% faster than right." },
             { "Up / Down Ratio", "Changes upward sensitivity relative to downward sensitivity. 1.00 keeps both equal; 1.05 makes upward movement about 5% faster than downward movement." },
@@ -358,8 +361,8 @@ namespace RawAccelModern
             { "Polling Rate (Hz)", "Define a taxa esperada de envio de dados do mouse. Mantenha em 0 para detecção automática. Use um valor manual somente se a temporização automática causar travamentos ou aceleração inconsistente." },
             { "Use a constant interval based on polling rate", "Força os cálculos a usarem um intervalo fixo derivado da taxa de polling configurada. Exige uma taxa manual e serve principalmente para solucionar problemas." },
             { "Disable acceleration for default devices", "Impede a aceleração em dispositivos que não possuem um perfil específico. Ative somente se quiser usar o Raw Accel exclusivamente nos dispositivos configurados." },
-            { "Test Driver Communication", "Verifica se o aplicativo consegue ler a configuração ativa do driver Raw Accel. Esse teste não altera o perfil." },
-            { "Apply Current Profile", "Envia novamente o perfil atual do settings.json para o driver. Use após edições externas ou quando o driver estiver utilizando uma configuração antiga." },
+            { "Test Driver Connection", "Verifica se o aplicativo consegue ler a configuração ativa do driver Raw Accel. Esse teste não salva nem altera o perfil." },
+            { "Reapply Saved Configuration", "Envia novamente ao driver a configuração que já está armazenada no settings.json. Não salva campos ainda não aplicados na página Gráficos. Quando alterar valores, use Salvar e aplicar nessa página." },
             { "Disable Acceleration", "Desativa imediatamente a aceleração no driver. O perfil salvo continua disponível e pode ser aplicado novamente depois." },
             { "Left / Right Ratio", "Altera a sensibilidade para a esquerda em relação à direita. 1,00 mantém os dois lados iguais; 1,05 deixa o movimento para a esquerda aproximadamente 5% mais rápido." },
             { "Up / Down Ratio", "Altera a sensibilidade para cima em relação à sensibilidade para baixo. 1,00 mantém as duas direções iguais; 1,05 deixa o movimento para cima aproximadamente 5% mais rápido." },
@@ -1164,7 +1167,7 @@ namespace RawAccelModern
                 LutEditorCard.Visibility = Visibility.Collapsed;
                 CurveParameterTitle.Text = T("Natural Curve Parameters");
                 CurveParameterDescription.Text = T("Smooth progressive curve with a configurable start, rise and ceiling");
-                if (CurveDragHint != null) CurveDragHint.Text = T("Drag Natural handles, then press Apply");
+                if (CurveDragHint != null) CurveDragHint.Text = T("Drag Natural handles, then press Save & Apply");
                 return;
             }
 
@@ -1173,7 +1176,7 @@ namespace RawAccelModern
             CurveModeNotice.Visibility = String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) ? Visibility.Collapsed : Visibility.Visible;
             if (String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase))
             {
-                if (CurveDragHint != null) CurveDragHint.Text = T("Drag LUT points freely, then press Apply");
+                if (CurveDragHint != null) CurveDragHint.Text = T("Drag LUT points freely, then press Save & Apply");
                 UpdateLutPointsDisplay();
                 return;
             }
@@ -2411,7 +2414,7 @@ namespace RawAccelModern
             {
                 int exitCode = RunSettingsWriter();
                 if (exitCode != 0) throw new InvalidOperationException("writer.exe retornou o código " + exitCode + ".");
-                SetAdvancedDriverStatus("Connected — current profile applied", true);
+                SetAdvancedDriverStatus("Connected — saved configuration reapplied", true);
                 DriverStatus.Text = T("Active");
                 DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
             }
@@ -2594,7 +2597,7 @@ namespace RawAccelModern
 
         private void MarkCurvePendingAndRedraw()
         {
-            DriverStatus.Text = T("Pending — press Apply");
+            DriverStatus.Text = T("Pending — press Save & Apply");
             DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
             DrawChart();
         }
@@ -2699,7 +2702,7 @@ namespace RawAccelModern
                 LimitBox.Text = FormatNumber(Math.Max(0, Math.Min(100, limit)));
             }
 
-            DriverStatus.Text = T("Pending — press Apply");
+            DriverStatus.Text = T("Pending — press Save & Apply");
             DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
             int now = Environment.TickCount;
             if (unchecked((uint)(now - lastCurveDragRenderTick)) >= 24)
