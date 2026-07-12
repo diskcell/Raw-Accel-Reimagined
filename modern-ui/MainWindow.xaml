@@ -223,7 +223,7 @@
           <Image Source="branding/raw-accel-reimagined-logo.png" Width="46" Height="46" Stretch="Uniform" Margin="0,0,14,0" />
           <TextBlock Text="Raw Accel Reimagined" FontSize="21" FontWeight="SemiBold" />
           <Border Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="10" Margin="14,0,0,0" Padding="10,4" VerticalAlignment="Center">
-            <TextBlock x:Name="AppVersionText" Text="v1.8.3" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
+            <TextBlock x:Name="AppVersionText" Text="v1.8.1" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
           </Border>
         </StackPanel>
         <Grid Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="540">
@@ -560,7 +560,7 @@
                   <TextBlock Text="Application Updates" FontSize="18" FontWeight="SemiBold" />
                   <Ellipse Fill="{DynamicResource AccentBrush}" Width="10" Height="10" Margin="10,1,0,0" />
                 </StackPanel>
-                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.3 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
+                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.1 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
                 <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
                   <CheckBox x:Name="AutoUpdateCheckBox" Content=" Automatically check for updates" IsChecked="True" Checked="AutoUpdateCheckBox_Changed" Unchecked="AutoUpdateCheckBox_Changed" />
                 </StackPanel>
