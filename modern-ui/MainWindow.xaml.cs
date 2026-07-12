@@ -768,7 +768,8 @@ namespace RawAccelModern
         {
             if (AppVersionText != null) AppVersionText.Text = "v" + UpdateService.CurrentVersionText;
             if (InstalledVersionText != null)
-                InstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Versão instalada: " : "Installed version: ") + UpdateService.CurrentVersionText;
+                InstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Versão instalada: " : "Installed version: ") +
+                    UpdateService.CurrentVersionText + (currentLanguage == "pt-BR" ? " • Canal estável" : " • Stable channel");
         }
 
         private void AutoUpdateCheckBox_Changed(object sender, RoutedEventArgs e)
