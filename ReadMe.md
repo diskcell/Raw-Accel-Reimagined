@@ -4,48 +4,64 @@
 
 # Raw Accel Reimagined
 
-**Site oficial do projeto:** [diskcell.github.io/Raw-Accel-Reimagined](https://diskcell.github.io/Raw-Accel-Reimagined/)
+**A modern, bilingual, and profile-oriented interface for the Raw Accel driver.**
 
-Uma interface moderna, bilíngue e orientada a perfis para o driver Raw Accel. O projeto preserva o motor de aceleração original e concentra as mudanças na experiência de configuração, visualização e gerenciamento.
+### [Visit the official website](https://diskcell.github.io/Raw-Accel-Reimagined/)
 
-Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original acceleration engine is preserved; this project focuses on configuration, visualization and management.
+Raw Accel Reimagined preserves the original acceleration engine while providing a redesigned experience for configuring, visualizing, and managing mouse acceleration on Windows.
 
-## Principais recursos / Highlights
+## Preview
 
-- Interface WPF moderna com tema escuro e gráfico interativo em tempo real.
-- Português do Brasil e inglês em toda a interface.
-- Perfis criáveis, duplicáveis, renomeáveis, excluíveis, exportáveis e importáveis com associação segura a dispositivos detectados.
-- Ajustes de eixos, resposta vertical e suavização com ajuda contextual.
-- Editor dedicado para Natural, com controles arrastáveis sincronizados com Input Offset, Decay Rate e Limit.
-- Edição livre universal: Natural, Classic, Jump, Synchronous e Power podem ser convertidas para pontos LUT, arrastados nos dois eixos, adicionados ou removidos antes de aplicar.
-- Cinco temas persistentes — Azul Escuro, Escuro, Claro, Roxo Meia-noite e Esmeralda — com navegação superior reorganizada.
-- Minimização para a bandeja do Windows e desligamento explícito do driver.
-- Modern WPF UI, live graph, device-aware profiles, axis tuning, contextual help and system tray support.
+### Charts and interactive curve editor
 
-## Executar / Run
+<p align="center">
+  <img src="docs/screenshots/raw-accel-reimagined-charts.png" width="100%" alt="Raw Accel Reimagined Charts page with the interactive acceleration curve editor">
+</p>
 
-1. Faça uma cópia de `settings.example.json` com o nome `settings.json` na raiz.
-2. Instale o driver com `installer.exe` se ele ainda não estiver instalado.
-3. Abra `RawAccelReimagined.exe`.
+### Advanced controls, profiles, and connected devices
 
-Seu `settings.json`, `.config`, `.reimagined.config`, preferências locais e IDs de dispositivos não são versionados. Isso impede que perfis pessoais sejam publicados acidentalmente.
+<p align="center">
+  <img src="docs/screenshots/raw-accel-reimagined-advanced.png" width="100%" alt="Raw Accel Reimagined Advanced page with driver, axis, profile, and device controls">
+</p>
 
-Copy `settings.example.json` to `settings.json`, install the driver if needed, then run `RawAccelReimagined.exe`. Local settings and hardware IDs are intentionally excluded from Git.
+## Highlights
 
-## Compilar / Build
+- Modern WPF interface with multiple persistent themes and a live acceleration graph.
+- Complete English and Brazilian Portuguese localization.
+- Interactive curve editing with draggable Natural curve handles.
+- Free Edit mode that converts Natural, Classic, Jump, Synchronous, and Power curves into editable LUT points.
+- Profiles that can be created, duplicated, renamed, deleted, imported, exported, and safely associated with detected mouse devices.
+- Controls for vertical response, axis tuning, device input, smoothing, stability, and driver recovery.
+- Contextual help for configuration options directly inside the application.
+- Windows system tray support and explicit acceleration shutdown when exiting.
 
-Requisitos: Windows x64, .NET Framework 4.7.2 Developer Pack e MSBuild.
+## Website
+
+- Main website: [diskcell.github.io/Raw-Accel-Reimagined](https://diskcell.github.io/Raw-Accel-Reimagined/)
+- English version: [diskcell.github.io/Raw-Accel-Reimagined/en](https://diskcell.github.io/Raw-Accel-Reimagined/en/)
+
+## Run
+
+1. Copy `settings.example.json` to `settings.json` in the project root.
+2. Install the driver with `installer.exe` if it is not installed yet.
+3. Run `RawAccelReimagined.exe`.
+
+Personal settings, local preferences, and hardware identifiers are intentionally excluded from Git to prevent private profiles and device data from being published accidentally.
+
+## Build
+
+Requirements: Windows x64, .NET Framework 4.7.2 Developer Pack, and MSBuild.
 
 ```powershell
 MSBuild.exe modern-ui\RawAccelModern.csproj /t:Rebuild /p:Configuration=Release /p:Platform=x64
 ```
 
-A saída é criada em `modern-ui\bin\Release\RawAccelReimagined.exe`.
+The executable is generated at `modern-ui\bin\Release\RawAccelReimagined.exe`.
 
-## Base e créditos / Upstream and credits
+## Upstream and credits
 
-Este projeto é baseado no [Raw Accel original](https://github.com/a1xd/rawaccel), distribuído sob licença MIT. O driver e as fórmulas de aceleração pertencem ao trabalho original; a licença e os créditos foram preservados.
+Raw Accel Reimagined is based on the [original Raw Accel project](https://github.com/a1xd/rawaccel), distributed under the MIT License. The original driver, acceleration formulas, license, and contributor credits are preserved. This repository focuses on the redesigned user interface and its additional configuration and management features.
 
-Original Raw Accel contributors: simon (driver and acceleration logic), \_m00se\_ (GUI, gain features and acceleration types), Sidiouth, TauntyArmordillo and Kovaak.
+Original Raw Accel contributors include simon (driver and acceleration logic), \_m00se\_ (GUI, gain features, and acceleration types), Sidiouth, TauntyArmordillo, and Kovaak.
 
-Consulte também o [guia original](doc/Guide.md) e a [FAQ](doc/FAQ.md).
+See the original [Guide](doc/Guide.md) and [FAQ](doc/FAQ.md) for more information about Raw Accel.
