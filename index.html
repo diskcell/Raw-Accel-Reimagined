@@ -5,10 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="google-site-verification" content="Goe5ZUtYQIPYvtjaUvqPZYEEkocUjE1G4FRK8tUKPJo">
   <meta name="description" content="Raw Accel Reimagined: interface moderna, bilíngue e orientada a perfis para o driver Raw Accel no Windows.">
+  <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#07111f">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Raw Accel Reimagined">
+  <meta property="og:description" content="Interface moderna, bilíngue e orientada a perfis para o driver Raw Accel no Windows.">
+  <meta property="og:url" content="https://diskcell.github.io/Raw-Accel-Reimagined/">
+  <meta property="og:image" content="https://diskcell.github.io/Raw-Accel-Reimagined/modern-ui/branding/raw-accel-reimagined-logo.png">
+  <meta property="og:image:alt" content="Logo do Raw Accel Reimagined">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Raw Accel Reimagined">
+  <meta name="twitter:description" content="Uma experiência moderna para configurar, visualizar e gerenciar o Raw Accel.">
+  <meta name="twitter:image" content="https://diskcell.github.io/Raw-Accel-Reimagined/modern-ui/branding/raw-accel-reimagined-logo.png">
   <link rel="canonical" href="https://diskcell.github.io/Raw-Accel-Reimagined/">
   <link rel="icon" href="modern-ui/branding/raw-accel-reimagined-logo.png">
   <title>Raw Accel Reimagined</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Raw Accel Reimagined",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows",
+    "description": "Interface moderna, bilíngue e orientada a perfis para configurar e visualizar o driver Raw Accel.",
+    "url": "https://diskcell.github.io/Raw-Accel-Reimagined/",
+    "codeRepository": "https://github.com/diskcell/Raw-Accel-Reimagined",
+    "license": "https://github.com/diskcell/Raw-Accel-Reimagined/blob/main/LICENSE",
+    "image": "https://diskcell.github.io/Raw-Accel-Reimagined/modern-ui/branding/raw-accel-reimagined-logo.png",
+    "inLanguage": ["pt-BR", "en"],
+    "isAccessibleForFree": true
+  }
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -23,6 +51,7 @@
     }
 
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -40,6 +69,25 @@
       margin: 0 auto;
       padding: 70px 0 55px;
     }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: rgba(11, 22, 39, .84);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; }
+    .brand img { width: 30px; height: 30px; object-fit: contain; }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .91rem; }
+    .nav-links a:hover { color: var(--accent-hover); }
 
     .hero {
       display: grid;
@@ -127,6 +175,70 @@
     .feature h2 { margin: 0 0 9px; font-size: 1.05rem; }
     .feature p { margin: 0; color: var(--muted); line-height: 1.55; font-size: .94rem; }
 
+    .content-section {
+      margin-top: 22px;
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(14, 26, 44, .88);
+    }
+
+    .content-section h2 { margin: 0 0 8px; font-size: clamp(1.55rem, 4vw, 2.15rem); }
+    .section-intro { margin: 0 0 22px; color: var(--muted); line-height: 1.65; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 13px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      position: relative;
+      min-height: 122px;
+      padding: 19px 18px 18px 54px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--surface-alt);
+      color: var(--muted);
+      line-height: 1.55;
+      counter-increment: step;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      top: 18px;
+      left: 17px;
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      color: white;
+      background: var(--accent);
+      font-weight: 750;
+    }
+
+    .notice {
+      margin-top: 17px;
+      padding: 16px 18px;
+      border-left: 3px solid var(--accent);
+      border-radius: 9px;
+      color: var(--muted);
+      background: rgba(21, 148, 251, .08);
+      line-height: 1.6;
+    }
+
+    .faq { display: grid; gap: 10px; }
+    details { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); }
+    summary { padding: 17px 19px; cursor: pointer; font-weight: 650; }
+    details p { margin: 0; padding: 0 19px 18px; color: var(--muted); line-height: 1.65; }
+    a { color: var(--accent-hover); }
+
     footer {
       padding-top: 32px;
       color: var(--muted);
@@ -136,15 +248,29 @@
 
     @media (max-width: 760px) {
       main { padding-top: 24px; }
+      .site-nav { align-items: flex-start; }
+      .nav-links { justify-content: flex-end; gap: 10px 14px; }
       .hero { grid-template-columns: 1fr; padding: 27px; }
       .logo { grid-row: 1; width: 96px; height: 96px; }
       .features { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .content-section { padding: 24px; }
     }
   </style>
 </head>
 <body>
   <main>
-    <section class="hero">
+    <nav class="site-nav" aria-label="Navegação principal">
+      <a class="brand" href="#top"><img src="modern-ui/branding/raw-accel-reimagined-logo.png" alt="">Raw Accel Reimagined</a>
+      <div class="nav-links">
+        <a href="#recursos">Recursos</a>
+        <a href="#instalacao">Instalação</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/diskcell/Raw-Accel-Reimagined">GitHub</a>
+      </div>
+    </nav>
+
+    <section class="hero" id="top">
       <div>
         <p class="eyebrow">Windows mouse acceleration</p>
         <h1>Raw Accel<br>Reimagined</h1>
@@ -160,7 +286,7 @@
       <img class="logo" src="modern-ui/branding/raw-accel-reimagined-logo.png" alt="Logo do Raw Accel Reimagined">
     </section>
 
-    <section class="features" aria-label="Principais recursos">
+    <section class="features" id="recursos" aria-label="Principais recursos">
       <article class="feature">
         <h2>Curvas interativas</h2>
         <p>Visualização em tempo real, controles arrastáveis e edição livre por pontos LUT.</p>
@@ -175,8 +301,54 @@
       </article>
     </section>
 
+    <section class="content-section" id="instalacao">
+      <h2>Instalação e primeiros passos</h2>
+      <p class="section-intro">O projeto ainda está em desenvolvimento. Use somente os arquivos deste repositório e mantenha um backup das suas configurações.</p>
+      <ol class="steps">
+        <li>Baixe ou clone o repositório oficial <a href="https://github.com/diskcell/Raw-Accel-Reimagined">Raw Accel Reimagined</a>.</li>
+        <li>Instale o driver com <code>installer.exe</code> e reinicie o Windows quando a instalação solicitar.</li>
+        <li>Abra <code>RawAccelReimagined.exe</code>, escolha um perfil e use <strong>Salvar e aplicar</strong>.</li>
+      </ol>
+      <div class="notice">
+        O Raw Accel Reimagined preserva o motor original do Raw Accel. As mudanças deste projeto estão concentradas na interface, visualização, perfis e ferramentas de configuração.
+      </div>
+    </section>
+
+    <section class="content-section" id="seguranca">
+      <h2>Transparência e segurança</h2>
+      <p class="section-intro">
+        Raw Accel utiliza um driver para transformar a entrada do mouse no Windows. Baixe somente pelo repositório oficial, confira os arquivos antes de instalar e evite pacotes republicados por terceiros.
+      </p>
+      <p class="notice">
+        O botão de fechar minimiza o aplicativo para a bandeja. Para encerrar e desativar a aceleração, use o botão direito no ícone da bandeja e escolha a opção de fechar.
+      </p>
+    </section>
+
+    <section class="content-section" id="faq">
+      <h2>Perguntas frequentes</h2>
+      <p class="section-intro">Respostas rápidas sobre o projeto e sua relação com o Raw Accel original.</p>
+      <div class="faq">
+        <details>
+          <summary>O que é o Raw Accel Reimagined?</summary>
+          <p>É uma interface independente e moderna para configurar o driver Raw Accel, com gráfico interativo, perfis, ajustes por dispositivo, temas e suporte a português e inglês.</p>
+        </details>
+        <details>
+          <summary>O projeto altera as fórmulas originais?</summary>
+          <p>Os cálculos e a comunicação principal com o driver continuam usando o motor original. Recursos novos validam as configurações pelo wrapper do Raw Accel antes de aplicá-las.</p>
+        </details>
+        <details>
+          <summary>Este é o projeto oficial do Raw Accel?</summary>
+          <p>Não. Raw Accel Reimagined é um projeto independente baseado no código do Raw Accel e mantém a licença e os créditos do trabalho original.</p>
+        </details>
+        <details>
+          <summary>Onde encontro o código e as instruções completas?</summary>
+          <p>No <a href="https://github.com/diskcell/Raw-Accel-Reimagined">repositório do projeto no GitHub</a>. Consulte também o <a href="https://github.com/RawAccelOfficial/rawaccel">Raw Accel original</a>.</p>
+        </details>
+      </div>
+    </section>
+
     <footer>
-      Projeto baseado no Raw Accel original e distribuído sob licença MIT.
+      Projeto independente baseado no <a href="https://github.com/RawAccelOfficial/rawaccel">Raw Accel original</a> e distribuído sob <a href="https://github.com/diskcell/Raw-Accel-Reimagined/blob/main/LICENSE">licença MIT</a>.
     </footer>
   </main>
 </body>

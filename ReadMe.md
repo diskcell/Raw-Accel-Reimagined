@@ -4,6 +4,8 @@
 
 # Raw Accel Reimagined
 
+**Site oficial do projeto:** [diskcell.github.io/Raw-Accel-Reimagined](https://diskcell.github.io/Raw-Accel-Reimagined/)
+
 Uma interface moderna, bilíngue e orientada a perfis para o driver Raw Accel. O projeto preserva o motor de aceleração original e concentra as mudanças na experiência de configuração, visualização e gerenciamento.
 
 Modern, bilingual and profile-oriented UI for the Raw Accel driver. The original acceleration engine is preserved; this project focuses on configuration, visualization and management.

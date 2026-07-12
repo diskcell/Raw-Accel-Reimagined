@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://diskcell.github.io/Raw-Accel-Reimagined/sitemap.xml
