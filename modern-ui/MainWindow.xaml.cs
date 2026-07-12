@@ -500,6 +500,9 @@ namespace RawAccelModern
             InitializeTrayIcon();
             rootDirectory = FindRootDirectory();
             settingsPath = IOPath.Combine(rootDirectory, "settings.json");
+            string exampleSettingsPath = IOPath.Combine(rootDirectory, "settings.example.json");
+            if (!File.Exists(settingsPath) && File.Exists(exampleSettingsPath))
+                File.Copy(exampleSettingsPath, settingsPath);
             Loaded += MainWindow_Loaded;
         }
 
@@ -539,12 +542,13 @@ namespace RawAccelModern
             DirectoryInfo current = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
             while (current != null)
             {
-                if (File.Exists(IOPath.Combine(current.FullName, "settings.json")) &&
-                    File.Exists(IOPath.Combine(current.FullName, "writer.exe")))
+                if (File.Exists(IOPath.Combine(current.FullName, "writer.exe")) &&
+                    (File.Exists(IOPath.Combine(current.FullName, "settings.json")) ||
+                     File.Exists(IOPath.Combine(current.FullName, "settings.example.json"))))
                     return current.FullName;
                 current = current.Parent;
             }
-            return AppDomain.CurrentDomain.BaseDirectory;
+            return new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).FullName;
         }
 
         private string T(string english)
@@ -877,11 +881,12 @@ namespace RawAccelModern
             string temporaryUpdater = IOPath.Combine(temporaryDirectory, "RawAccelUpdater.exe");
             File.Copy(installedUpdater, temporaryUpdater, true);
 
-            string arguments = "--package " + QuoteArgument(packagePath) +
-                " --target " + QuoteArgument(rootDirectory) +
+            string normalizedRoot = new DirectoryInfo(rootDirectory).FullName;
+            string arguments = "--package " + WindowsCommandLine.QuoteArgument(packagePath) +
+                " --target " + WindowsCommandLine.QuoteArgument(normalizedRoot) +
                 " --pid " + Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) +
-                " --launch " + QuoteArgument("RawAccelReimagined.exe") +
-                " --version " + QuoteArgument(version);
+                " --launch " + WindowsCommandLine.QuoteArgument("RawAccelReimagined.exe") +
+                " --version " + WindowsCommandLine.QuoteArgument(version);
             Process.Start(new ProcessStartInfo(temporaryUpdater, arguments)
             {
                 WorkingDirectory = temporaryDirectory,
@@ -891,11 +896,6 @@ namespace RawAccelModern
             allowApplicationExit = true;
             if (trayIcon != null) trayIcon.Visible = false;
             Close();
-        }
-
-        private static string QuoteArgument(string value)
-        {
-            return "\"" + (value ?? String.Empty).Replace("\"", "\\\"") + "\"";
         }
 
         private void ShowUpdatedConfirmation()
