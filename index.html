@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-site-verification" content="Goe5ZUtYQIPYvtjaUvqPZYEEkocUjE1G4FRK8tUKPJo">
+  <meta name="description" content="Raw Accel Reimagined: interface moderna, bilíngue e orientada a perfis para o driver Raw Accel no Windows.">
+  <meta name="theme-color" content="#07111f">
+  <link rel="canonical" href="https://diskcell.github.io/Raw-Accel-Reimagined/">
+  <link rel="icon" href="modern-ui/branding/raw-accel-reimagined-logo.png">
+  <title>Raw Accel Reimagined</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #07111f;
+      --surface: #0e1a2c;
+      --surface-alt: #111d31;
+      --border: #22334d;
+      --text: #e7edf6;
+      --muted: #93a2b8;
+      --accent: #1594fb;
+      --accent-hover: #42adff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 75% 12%, rgba(21, 148, 251, .16), transparent 33rem),
+        radial-gradient(circle at 15% 80%, rgba(91, 70, 255, .10), transparent 28rem),
+        var(--background);
+    }
+
+    main {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 70px 0 55px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 44px;
+      align-items: center;
+      padding: 38px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(17, 29, 49, .96), rgba(11, 22, 39, .92));
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .28);
+    }
+
+    .logo {
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+      filter: drop-shadow(0 15px 28px rgba(21, 148, 251, .22));
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: .78rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 6vw, 4.7rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1.08rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface-alt);
+      text-decoration: none;
+      font-weight: 650;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .button:hover { transform: translateY(-2px); border-color: var(--accent-hover); }
+    .button.primary:hover { background: var(--accent-hover); }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .feature {
+      padding: 23px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(14, 26, 44, .88);
+    }
+
+    .feature h2 { margin: 0 0 9px; font-size: 1.05rem; }
+    .feature p { margin: 0; color: var(--muted); line-height: 1.55; font-size: .94rem; }
+
+    footer {
+      padding-top: 32px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .88rem;
+    }
+
+    @media (max-width: 760px) {
+      main { padding-top: 24px; }
+      .hero { grid-template-columns: 1fr; padding: 27px; }
+      .logo { grid-row: 1; width: 96px; height: 96px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Windows mouse acceleration</p>
+        <h1>Raw Accel<br>Reimagined</h1>
+        <p class="lead">
+          Uma interface moderna, bilíngue e orientada a perfis para o Raw Accel.
+          O motor original é preservado enquanto configuração, visualização e gerenciamento recebem uma experiência renovada.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/diskcell/Raw-Accel-Reimagined">Ver projeto no GitHub</a>
+          <a class="button" href="https://github.com/diskcell/Raw-Accel-Reimagined#executar--run">Como executar</a>
+        </div>
+      </div>
+      <img class="logo" src="modern-ui/branding/raw-accel-reimagined-logo.png" alt="Logo do Raw Accel Reimagined">
+    </section>
+
+    <section class="features" aria-label="Principais recursos">
+      <article class="feature">
+        <h2>Curvas interativas</h2>
+        <p>Visualização em tempo real, controles arrastáveis e edição livre por pontos LUT.</p>
+      </article>
+      <article class="feature">
+        <h2>Perfis e dispositivos</h2>
+        <p>Gerenciamento seguro de perfis e associação aos mouses detectados no Windows.</p>
+      </article>
+      <article class="feature">
+        <h2>Português e inglês</h2>
+        <p>Interface, ajuda contextual e temas visuais disponíveis nos dois idiomas.</p>
+      </article>
+    </section>
+
+    <footer>
+      Projeto baseado no Raw Accel original e distribuído sob licença MIT.
+    </footer>
+  </main>
+</body>
+</html>
