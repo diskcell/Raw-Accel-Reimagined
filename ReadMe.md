@@ -33,6 +33,8 @@ Raw Accel Reimagined preserves the original acceleration engine while providing 
 - Profiles that can be created, duplicated, renamed, deleted, imported, exported, and safely associated with detected mouse devices.
 - Controls for vertical response, axis tuning, device input, smoothing, stability, and driver recovery.
 - Contextual help for configuration options directly inside the application.
+- A complete bilingual Help Center with Getting Started guidance, curve explanations, common questions, application status, and an in-app Guide/FAQ viewer.
+- A lower-memory rendering path plus automatic resident-memory release while the application is hidden in the system tray.
 - Windows system tray support and explicit acceleration shutdown when exiting.
 - Built-in, bilingual update checks with verified GitHub Release downloads and settings-safe installation.
 - Silent, themed in-app dialogs instead of Windows notification boxes and sounds.

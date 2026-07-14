@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media;
 using System.Runtime.InteropServices;
 
 namespace RawAccelModern
@@ -10,6 +12,9 @@ namespace RawAccelModern
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // This UI is mostly static. Software rendering avoids loading the much larger
+            // vendor GPU stack while keeping mouse acceleration calculations untouched.
+            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
             try
             {
                 SetCurrentProcessExplicitAppUserModelID("RawAccel.Reimagined");

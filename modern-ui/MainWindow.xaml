@@ -224,7 +224,7 @@
           <Image Source="branding/raw-accel-reimagined-logo.png" Width="46" Height="46" Stretch="Uniform" Margin="0,0,14,0" />
           <TextBlock Text="Raw Accel Reimagined" FontSize="21" FontWeight="SemiBold" />
           <Border Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="10" Margin="14,0,0,0" Padding="10,4" VerticalAlignment="Center">
-            <TextBlock x:Name="AppVersionText" Text="v1.8.2" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
+            <TextBlock x:Name="AppVersionText" Text="v1.8.3" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
           </Border>
         </StackPanel>
         <Grid Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="540">
@@ -232,7 +232,7 @@
           <Button Grid.Column="0" Style="{StaticResource NavButton}" Click="Charts_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="ChartsNavIcon" Text="⌁" FontSize="22" Margin="0,0,11,0"/><TextBlock x:Name="ChartsNavText" Text="Charts" FontSize="16"/></StackPanel><Border x:Name="ChartsNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2"/></Grid></Button>
           <Button Grid.Column="1" Style="{StaticResource NavButton}" Click="Advanced_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="AdvancedNavIcon" Text="⚙" FontSize="18" Margin="0,0,11,0"/><TextBlock x:Name="AdvancedNavText" Text="Advanced" FontSize="16"/></StackPanel><Border x:Name="AdvancedNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2" Visibility="Collapsed"/></Grid></Button>
           <Button Grid.Column="2" Style="{StaticResource NavButton}" Click="Themes_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="ThemesNavIcon" Text="☼" FontSize="21" Margin="0,0,11,0"/><TextBlock x:Name="ThemesNavText" Text="Themes" FontSize="16"/></StackPanel><Border x:Name="ThemesNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2" Visibility="Collapsed"/></Grid></Button>
-          <Button Grid.Column="3" Style="{StaticResource NavButton}" Click="Help_Click"><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock Text="?" FontSize="18" Margin="0,0,11,0"/><TextBlock Text="Help" FontSize="16"/></StackPanel></Button>
+          <Button Grid.Column="3" Style="{StaticResource NavButton}" Click="Help_Click"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="3"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><TextBlock x:Name="HelpNavIcon" Text="?" FontSize="18" Margin="0,0,11,0"/><TextBlock x:Name="HelpNavText" Text="Help" FontSize="16"/></StackPanel><Border x:Name="HelpNavIndicator" Grid.Row="1" Background="{DynamicResource AccentBrush}" CornerRadius="2" Visibility="Collapsed"/></Grid></Button>
         </Grid>
         <Grid Grid.Column="2" Margin="10,0,12,0">
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="130"/><ColumnDefinition Width="42"/><ColumnDefinition Width="42"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
@@ -606,13 +606,126 @@
                   <TextBlock Text="Application Updates" FontSize="18" FontWeight="SemiBold" />
                   <Ellipse Fill="{DynamicResource AccentBrush}" Width="10" Height="10" Margin="10,1,0,0" />
                 </StackPanel>
-                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.2 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
+                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.3 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
                 <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
                   <CheckBox x:Name="AutoUpdateCheckBox" Content=" Automatically check for updates" IsChecked="True" Checked="AutoUpdateCheckBox_Changed" Unchecked="AutoUpdateCheckBox_Changed" />
                 </StackPanel>
                 <Button x:Name="CheckUpdatesButton" Grid.Row="3" Style="{StaticResource ModernButton}" Content="Check for Updates" Click="CheckUpdates_Click" />
               </Grid>
             </Border>
+          </Grid>
+        </ScrollViewer>
+      </Grid>
+
+      <Grid x:Name="HelpPage" Grid.Row="1" Margin="28,20" Visibility="Collapsed">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid Margin="4,0,16,20">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="Help Center" FontSize="28" FontWeight="SemiBold" />
+            <TextBlock Text="Learn the essentials, solve common problems and find project resources." Foreground="{DynamicResource MutedBrush}" FontSize="14" Margin="0,6,0,0" />
+          </StackPanel>
+          <Border Grid.Column="1" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="12" Padding="14,8" VerticalAlignment="Center">
+            <TextBlock x:Name="HelpVersionBadge" Text="Version 1.8.3" Foreground="{DynamicResource AccentHoverBrush}" FontWeight="SemiBold" />
+          </Border>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <Grid Margin="4,0,16,10" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+              <Border Style="{StaticResource Card}" Padding="26,22">
+                <StackPanel>
+                  <TextBlock Text="Getting Started" FontSize="20" FontWeight="SemiBold" />
+                  <TextBlock Text="A safe first configuration in four steps" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,18" />
+
+                  <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}" VerticalAlignment="Top"><TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Choose or create a profile" FontWeight="SemiBold"/><TextBlock Text="Use the profile selector at the top. Device associations can be managed in Advanced." Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"/></StackPanel>
+                  </Grid>
+                  <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}" VerticalAlignment="Top"><TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Set your base sensitivity" FontWeight="SemiBold"/><TextBlock Text="Start with Sens Multiplier at 1.00 and select the curve that best matches the response you want." Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"/></StackPanel>
+                  </Grid>
+                  <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}" VerticalAlignment="Top"><TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Adjust gradually and watch the graph" FontWeight="SemiBold"/><TextBlock Text="Small changes are easier to evaluate. The mouse marker shows where your current movement reaches the curve." Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"/></StackPanel>
+                  </Grid>
+                  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}" VerticalAlignment="Top"><TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Save and apply" FontWeight="SemiBold"/><TextBlock Text="Changes only reach the driver after Save &amp; Apply. Test the result before making another large adjustment." Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"/></StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource Card}" Padding="26,22">
+                <StackPanel>
+                  <TextBlock Text="Curve Guide" FontSize="20" FontWeight="SemiBold" />
+                  <TextBlock Text="Choose a curve based on the behavior you want" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,16" />
+                  <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                      <StackPanel><TextBlock Text="Natural" Foreground="{DynamicResource AccentHoverBrush}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="Smooth and progressive. Recommended as a comfortable starting point." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,7,0,0"/></StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                      <StackPanel><TextBlock Text="Classic" Foreground="{DynamicResource AccentHoverBrush}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="Precise mathematical control over rate, exponent, threshold and cap." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,7,0,0"/></StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                      <StackPanel><TextBlock Text="LUT" Foreground="{DynamicResource AccentHoverBrush}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="Free point-by-point editing. The vertical value is the output-to-input ratio." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,7,0,0"/></StackPanel>
+                    </Border>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource Card}" Padding="26,22">
+                <StackPanel>
+                  <TextBlock Text="Common Questions" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,15"/>
+                  <TextBlock Text="Why did my change not affect the mouse?" FontWeight="SemiBold"/>
+                  <TextBlock Text="Confirm that you pressed Save &amp; Apply and that the mouse is using the selected profile. An associated mouse only uses its assigned profile." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,13"/>
+                  <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,13"/>
+                  <TextBlock Text="Why does the LUT graph show a high value without making the mouse faster?" FontWeight="SemiBold"/>
+                  <TextBlock Text="The selected profile may not control that mouse, or the high point may be outside the speed you actually reach. Watch the live marker and profile assignment notice." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,13"/>
+                  <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,13"/>
+                  <TextBlock Text="Does closing the window disable acceleration?" FontWeight="SemiBold"/>
+                  <TextBlock Text="The close button hides the app in the notification area. Use the tray menu and choose Close (disable acceleration) to stop the driver effect." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,0"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2">
+              <Border Style="{StaticResource Card}" Padding="22,20">
+                <StackPanel>
+                  <TextBlock Text="Quick Actions" FontSize="20" FontWeight="SemiBold" />
+                  <TextBlock Text="Documentation and project links" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,15" />
+                  <Button Style="{StaticResource AccentButton}" Height="43" Content="Open Complete Guide" Click="OpenGuide_Click" Margin="0,0,0,9"/>
+                  <Button Style="{StaticResource ModernButton}" Height="43" Content="Open FAQ" Click="OpenFaq_Click" Margin="0,0,0,9"/>
+                  <Button Style="{StaticResource ModernButton}" Height="43" Content="Open GitHub Project" Click="OpenProject_Click" Margin="0,0,0,9"/>
+                  <Button Style="{StaticResource ModernButton}" Height="43" Content="View Releases" Click="OpenReleases_Click"/>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource Card}" Padding="22,20">
+                <StackPanel>
+                  <TextBlock Text="Application Status" FontSize="20" FontWeight="SemiBold" />
+                  <TextBlock Text="Snapshot taken when this page was opened" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,15" />
+                  <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="14,11" Margin="0,0,0,8"><TextBlock x:Name="HelpInstalledVersionText" Text="Installed version: 1.8.3" TextWrapping="Wrap"/></Border>
+                  <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="14,11" Margin="0,0,0,8"><TextBlock x:Name="HelpSelectedProfileText" Text="Selected profile: default" TextWrapping="Wrap"/></Border>
+                  <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="14,11" Margin="0,0,0,14"><TextBlock x:Name="HelpDriverStatusText" Text="Driver status: Ready" TextWrapping="Wrap"/></Border>
+                  <Button Style="{StaticResource ModernButton}" Height="42" Content="Go to Charts" Click="HelpGoCharts_Click" Margin="0,0,0,9"/>
+                  <Button Style="{StaticResource ModernButton}" Height="42" Content="Open Driver &amp; Recovery" Click="HelpGoAdvanced_Click"/>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource Card}" Padding="22,20">
+                <StackPanel>
+                  <TextBlock Text="Safety Tips" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                  <TextBlock Text="- Export important profiles before major experiments." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,7"/>
+                  <TextBlock Text="- Change one parameter at a time and test it." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,7"/>
+                  <TextBlock Text="- Use Restore Defaults for a safe preview, then Save &amp; Apply only if desired." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
           </Grid>
         </ScrollViewer>
       </Grid>
@@ -643,7 +756,7 @@
             <TextBlock x:Name="WhatsNewSubtitle" Text="Updated successfully" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,0"/>
           </StackPanel>
           <Border Grid.Column="2" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
-            <TextBlock x:Name="WhatsNewVersion" Text="v1.8.2" Foreground="{DynamicResource AccentHoverBrush}" FontSize="13" FontWeight="SemiBold"/>
+            <TextBlock x:Name="WhatsNewVersion" Text="v1.8.3" Foreground="{DynamicResource AccentHoverBrush}" FontSize="13" FontWeight="SemiBold"/>
           </Border>
         </Grid>
 
@@ -660,6 +773,43 @@
             <Button x:Name="WhatsNewReleaseButton" Style="{StaticResource ModernButton}" Content="View release details" Click="WhatsNewRelease_Click"/>
             <Button Grid.Column="2" Style="{StaticResource AccentButton}" Content="Continue" Click="CloseWhatsNew_Click"/>
           </Grid>
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+
+  <Grid x:Name="HelpDocumentOverlay" Background="#D0000000" Visibility="Collapsed" Panel.ZIndex="600">
+    <Border Width="920" MaxWidth="1100" MaxHeight="780" Margin="34" HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource AccentBrush}"
+            BorderThickness="1" CornerRadius="18">
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="7"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Background="{DynamicResource AccentBrush}" CornerRadius="18,18,0,0"/>
+
+        <Grid Grid.Row="1" Margin="30,24,30,18">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="54"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+            <TextBlock Text="?" Foreground="{DynamicResource AccentHoverBrush}" FontSize="21" FontWeight="Bold" HorizontalAlignment="Center"/>
+          </Border>
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock x:Name="HelpDocumentTitle" Text="Complete Guide" FontSize="24" FontWeight="SemiBold"/>
+            <TextBlock x:Name="HelpDocumentSubtitle" Text="Built-in documentation" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,0"/>
+          </StackPanel>
+          <Border Grid.Column="2" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="11" Padding="11,6" VerticalAlignment="Center">
+            <TextBlock x:Name="HelpDocumentLanguage" Text="Português" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold"/>
+          </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Margin="30,0" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="11">
+          <ScrollViewer x:Name="HelpDocumentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,20">
+            <TextBlock x:Name="HelpDocumentContent" TextWrapping="Wrap" FontSize="14" LineHeight="23"/>
+          </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="30,18,30,26">
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="230"/></Grid.ColumnDefinitions>
+          <TextBlock Text="This viewer keeps the documentation inside the application." Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
+          <Button x:Name="CloseHelpDocumentButton" Grid.Column="1" Style="{StaticResource AccentButton}" Height="44" Content="Close Guide" Click="CloseHelpDocument_Click"/>
         </Grid>
       </Grid>
     </Border>

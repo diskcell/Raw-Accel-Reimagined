@@ -195,6 +195,51 @@ namespace RawAccelModern
             { "A deep purple style with softer highlights", "Um estilo roxo profundo com destaques mais suaves" },
             { "Dark green surfaces with an energetic accent", "Superfícies verde-escuras com um destaque vibrante" },
             { "Help", "Ajuda" },
+            { "Help Center", "Central de ajuda" },
+            { "Learn the essentials, solve common problems and find project resources.", "Aprenda o essencial, resolva problemas comuns e encontre recursos do projeto." },
+            { "Getting Started", "Primeiros passos" },
+            { "A safe first configuration in four steps", "Uma primeira configuração segura em quatro etapas" },
+            { "Choose or create a profile", "Escolha ou crie um perfil" },
+            { "Use the profile selector at the top. Device associations can be managed in Advanced.", "Use o seletor de perfil na parte superior. As associações de dispositivos podem ser gerenciadas em Avançado." },
+            { "Set your base sensitivity", "Defina sua sensibilidade base" },
+            { "Start with Sens Multiplier at 1.00 and select the curve that best matches the response you want.", "Comece com o Multiplicador de sensibilidade em 1,00 e selecione a curva que melhor corresponde à resposta desejada." },
+            { "Adjust gradually and watch the graph", "Ajuste gradualmente e observe o gráfico" },
+            { "Small changes are easier to evaluate. The mouse marker shows where your current movement reaches the curve.", "Pequenas alterações são mais fáceis de avaliar. O marcador do mouse mostra onde o movimento atual alcança a curva." },
+            { "Save and apply", "Salve e aplique" },
+            { "Changes only reach the driver after Save & Apply. Test the result before making another large adjustment.", "As mudanças só chegam ao driver após Salvar e aplicar. Teste o resultado antes de fazer outro ajuste grande." },
+            { "Curve Guide", "Guia de curvas" },
+            { "Choose a curve based on the behavior you want", "Escolha uma curva com base no comportamento desejado" },
+            { "Smooth and progressive. Recommended as a comfortable starting point.", "Suave e progressiva. Recomendada como um ponto de partida confortável." },
+            { "Precise mathematical control over rate, exponent, threshold and cap.", "Controle matemático preciso sobre taxa, expoente, limiar e limite." },
+            { "Free point-by-point editing. The vertical value is the output-to-input ratio.", "Edição livre ponto a ponto. O valor vertical é a proporção entre saída e entrada." },
+            { "Common Questions", "Dúvidas comuns" },
+            { "Why did my change not affect the mouse?", "Por que minha alteração não afetou o mouse?" },
+            { "Confirm that you pressed Save & Apply and that the mouse is using the selected profile. An associated mouse only uses its assigned profile.", "Confirme que você clicou em Salvar e aplicar e que o mouse está usando o perfil selecionado. Um mouse associado utiliza somente o perfil atribuído a ele." },
+            { "Why does the LUT graph show a high value without making the mouse faster?", "Por que o gráfico LUT mostra um valor alto sem deixar o mouse mais rápido?" },
+            { "The selected profile may not control that mouse, or the high point may be outside the speed you actually reach. Watch the live marker and profile assignment notice.", "O perfil selecionado pode não controlar esse mouse, ou o ponto alto pode estar fora da velocidade que você realmente alcança. Observe o marcador ao vivo e o aviso de associação de perfil." },
+            { "Does closing the window disable acceleration?", "Fechar a janela desativa a aceleração?" },
+            { "The close button hides the app in the notification area. Use the tray menu and choose Close (disable acceleration) to stop the driver effect.", "O botão de fechar oculta o aplicativo na área de notificação. Use o menu da bandeja e escolha Fechar (desativar aceleração) para interromper o efeito do driver." },
+            { "Quick Actions", "Ações rápidas" },
+            { "Documentation and project links", "Documentação e links do projeto" },
+            { "Open Complete Guide", "Abrir guia completo" },
+            { "Open FAQ", "Abrir perguntas frequentes" },
+            { "Open GitHub Project", "Abrir projeto no GitHub" },
+            { "View Releases", "Ver versões" },
+            { "Application Status", "Status do aplicativo" },
+            { "Snapshot taken when this page was opened", "Resumo atualizado quando esta página foi aberta" },
+            { "Go to Charts", "Ir para Gráficos" },
+            { "Open Driver & Recovery", "Abrir Driver e recuperação" },
+            { "Safety Tips", "Dicas de segurança" },
+            { "- Export important profiles before major experiments.", "- Exporte perfis importantes antes de grandes experimentos." },
+            { "- Change one parameter at a time and test it.", "- Altere um parâmetro por vez e teste o resultado." },
+            { "- Use Restore Defaults for a safe preview, then Save & Apply only if desired.", "- Use Restaurar padrões para uma prévia segura e depois Salvar e aplicar somente se desejar." },
+            { "Unable to open help", "Não foi possível abrir a ajuda" },
+            { "The requested help resource could not be found.", "O recurso de ajuda solicitado não foi encontrado." },
+            { "Complete Guide", "Guia completo" },
+            { "Frequently Asked Questions", "Perguntas frequentes" },
+            { "Built-in documentation", "Documentação integrada" },
+            { "This viewer keeps the documentation inside the application.", "Este visualizador mantém a documentação dentro do aplicativo." },
+            { "Close Guide", "Fechar guia" },
             { "Application Updates", "Atualizações do aplicativo" },
             { "Automatically check for updates", "Verificar atualizações automaticamente" },
             { "Check for Updates", "Verificar atualizações" },
@@ -536,6 +581,10 @@ namespace RawAccelModern
         [DllImport("user32.dll")]
         private static extern uint GetRawInputData(IntPtr rawInput, uint command, IntPtr data, ref uint size, uint headerSize);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetProcessWorkingSetSize(IntPtr process, IntPtr minimumWorkingSetSize, IntPtr maximumWorkingSetSize);
+
         public MainWindow()
         {
             InitializeComponent();
@@ -661,6 +710,7 @@ namespace RawAccelModern
             UpdateThemeSelection();
             UpdateNavigationAppearance();
             UpdateProfileAssignmentNotice();
+            UpdateHelpStatus();
         }
 
         private Color ThemeColor(string role)
@@ -818,6 +868,24 @@ namespace RawAccelModern
             if (InstalledVersionText != null)
                 InstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Versão instalada: " : "Installed version: ") +
                     UpdateService.CurrentVersionText + (currentLanguage == "pt-BR" ? " • Canal estável" : " • Stable channel");
+            UpdateHelpStatus();
+        }
+
+        private void UpdateHelpStatus()
+        {
+            if (HelpVersionBadge == null) return;
+            string version = UpdateService.CurrentVersionText;
+            string selectedProfile = ProfileBox == null || ProfileBox.SelectedItem == null
+                ? "—"
+                : Convert.ToString(ProfileBox.SelectedItem);
+            string driverState = DriverStatus == null || String.IsNullOrWhiteSpace(DriverStatus.Text)
+                ? T("Not tested")
+                : DriverStatus.Text;
+
+            HelpVersionBadge.Text = (currentLanguage == "pt-BR" ? "Versão " : "Version ") + version;
+            HelpInstalledVersionText.Text = (currentLanguage == "pt-BR" ? "Versão instalada: " : "Installed version: ") + version;
+            HelpSelectedProfileText.Text = (currentLanguage == "pt-BR" ? "Perfil selecionado: " : "Selected profile: ") + selectedProfile;
+            HelpDriverStatusText.Text = (currentLanguage == "pt-BR" ? "Status do driver: " : "Driver status: ") + driverState;
         }
 
         private void AutoUpdateCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -1159,6 +1227,7 @@ namespace RawAccelModern
             if (WindowState != WindowState.Minimized) stateBeforeTray = WindowState;
             ShowInTaskbar = false;
             Hide();
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(TrimProcessWorkingSet));
             if (!trayMessageShown && trayIcon != null)
             {
                 trayMessageShown = true;
@@ -1166,6 +1235,19 @@ namespace RawAccelModern
                 trayIcon.BalloonTipText = T("Double-click to open or right-click to close.");
                 trayIcon.BalloonTipIcon = WinForms.ToolTipIcon.Info;
                 trayIcon.ShowBalloonTip(3500);
+            }
+        }
+
+        private static void TrimProcessWorkingSet()
+        {
+            try
+            {
+                using (Process process = Process.GetCurrentProcess())
+                    SetProcessWorkingSetSize(process.Handle, new IntPtr(-1), new IntPtr(-1));
+            }
+            catch
+            {
+                // Memory trimming is an optional optimization and must never affect tray behavior.
             }
         }
 
@@ -1853,6 +1935,7 @@ namespace RawAccelModern
             ChartsPage.Visibility = Visibility.Visible;
             AdvancedPage.Visibility = Visibility.Collapsed;
             ThemesPage.Visibility = Visibility.Collapsed;
+            HelpPage.Visibility = Visibility.Collapsed;
             UpdateNavigationAppearance();
         }
 
@@ -1861,6 +1944,7 @@ namespace RawAccelModern
             ChartsPage.Visibility = Visibility.Collapsed;
             AdvancedPage.Visibility = Visibility.Visible;
             ThemesPage.Visibility = Visibility.Collapsed;
+            HelpPage.Visibility = Visibility.Collapsed;
             UpdateNavigationAppearance();
             LoadAdvancedSettings();
             RefreshConnectedDevices();
@@ -1868,10 +1952,11 @@ namespace RawAccelModern
 
         private void UpdateNavigationAppearance()
         {
-            if (ChartsNavText == null || AdvancedNavText == null || ThemesNavText == null) return;
+            if (ChartsNavText == null || AdvancedNavText == null || ThemesNavText == null || HelpNavText == null) return;
             bool charts = ChartsPage.Visibility == Visibility.Visible;
             bool advanced = AdvancedPage.Visibility == Visibility.Visible;
             bool themes = ThemesPage.Visibility == Visibility.Visible;
+            bool help = HelpPage.Visibility == Visibility.Visible;
             SolidColorBrush accent = new SolidColorBrush(ThemeColor("Accent"));
             SolidColorBrush muted = new SolidColorBrush(ThemeColor("Muted"));
             ChartsNavText.Foreground = charts ? accent : muted;
@@ -1880,9 +1965,12 @@ namespace RawAccelModern
             AdvancedNavIcon.Foreground = AdvancedNavText.Foreground;
             ThemesNavText.Foreground = themes ? accent : muted;
             ThemesNavIcon.Foreground = ThemesNavText.Foreground;
+            HelpNavText.Foreground = help ? accent : muted;
+            HelpNavIcon.Foreground = HelpNavText.Foreground;
             ChartsNavIndicator.Visibility = charts ? Visibility.Visible : Visibility.Collapsed;
             AdvancedNavIndicator.Visibility = advanced ? Visibility.Visible : Visibility.Collapsed;
             ThemesNavIndicator.Visibility = themes ? Visibility.Visible : Visibility.Collapsed;
+            HelpNavIndicator.Visibility = help ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void RefreshDevices_Click(object sender, RoutedEventArgs e)
@@ -3781,13 +3869,257 @@ namespace RawAccelModern
             ChartsPage.Visibility = Visibility.Collapsed;
             AdvancedPage.Visibility = Visibility.Collapsed;
             ThemesPage.Visibility = Visibility.Visible;
+            HelpPage.Visibility = Visibility.Collapsed;
             UpdateNavigationAppearance();
             UpdateThemeSelection();
         }
 
         private void Help_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo(IOPath.Combine(rootDirectory, "doc", "Guide.md")) { UseShellExecute = true });
+            ChartsPage.Visibility = Visibility.Collapsed;
+            AdvancedPage.Visibility = Visibility.Collapsed;
+            ThemesPage.Visibility = Visibility.Collapsed;
+            HelpPage.Visibility = Visibility.Visible;
+            UpdateHelpStatus();
+            UpdateNavigationAppearance();
+        }
+
+        private void HelpGoCharts_Click(object sender, RoutedEventArgs e)
+        {
+            Charts_Click(sender, e);
+        }
+
+        private void HelpGoAdvanced_Click(object sender, RoutedEventArgs e)
+        {
+            Advanced_Click(sender, e);
+        }
+
+        private void OpenGuide_Click(object sender, RoutedEventArgs e)
+        {
+            ShowHelpDocument(T("Complete Guide"), BuildGuideContent());
+        }
+
+        private void OpenFaq_Click(object sender, RoutedEventArgs e)
+        {
+            ShowHelpDocument(T("Frequently Asked Questions"), BuildFaqContent());
+        }
+
+        private void ShowHelpDocument(string title, string content)
+        {
+            HelpDocumentTitle.Text = title;
+            HelpDocumentSubtitle.Text = T("Built-in documentation") + " • Raw Accel Reimagined " + UpdateService.CurrentVersionText;
+            HelpDocumentLanguage.Text = currentLanguage == "pt-BR" ? "Português" : "English";
+            HelpDocumentContent.Text = content;
+            HelpDocumentOverlay.Visibility = Visibility.Visible;
+            HelpDocumentScroll.ScrollToTop();
+            CloseHelpDocumentButton.Focus();
+        }
+
+        private void CloseHelpDocument_Click(object sender, RoutedEventArgs e)
+        {
+            HelpDocumentOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private string BuildGuideContent()
+        {
+            if (currentLanguage == "pt-BR")
+            {
+                return String.Join(Environment.NewLine, new[]
+                {
+                    "GUIA COMPLETO",
+                    "",
+                    "1. ANTES DE COMEÇAR",
+                    "O Raw Accel Reimagined controla a interface, os perfis e a comunicação com o driver Raw Accel. Faça alterações graduais e mantenha uma cópia dos perfis importantes.",
+                    "",
+                    "2. PERFIS E DISPOSITIVOS",
+                    "• Escolha o perfil ativo no seletor superior.",
+                    "• Em Avançado, você pode criar, duplicar, renomear, importar ou exportar perfis.",
+                    "• Um mouse associado utiliza somente o perfil atribuído a ele. Alterar outro perfil não modificará esse mouse.",
+                    "• Teclados que expõem uma interface compatível com mouse podem aparecer na detecção. Marque-os como Não é um mouse para ocultá-los.",
+                    "",
+                    "3. CONTROLES PRINCIPAIS",
+                    "Multiplicador de sensibilidade: altera a sensibilidade base em todas as velocidades. 1,00 mantém o valor original.",
+                    "Proporção Y / X: altera a sensibilidade vertical em relação à horizontal. 1,05 deixa o eixo vertical aproximadamente 5% mais rápido.",
+                    "Rotação: gira os eixos usados nos cálculos direcionais. Normalmente deve permanecer em 0.",
+                    "Resposta vertical: Ativação vertical muda quando o eixo vertical entra na curva; Intensidade vertical aumenta somente a parte acelerada do movimento vertical.",
+                    "",
+                    "4. ESCOLHENDO UMA CURVA",
+                    "Natural: crescimento suave e progressivo. É a opção mais simples para começar.",
+                    "Clássica: oferece controle matemático de taxa, expoente, deslocamento e limite.",
+                    "Salto: cria uma mudança mais direta entre duas regiões de sensibilidade.",
+                    "Síncrona: organiza a mudança de sensibilidade ao redor de uma velocidade central.",
+                    "Potência: aumenta a aceleração seguindo uma curva exponencial.",
+                    "LUT: permite edição livre ponto a ponto, sem ficar presa a uma fórmula específica.",
+                    "Sem aceleração: mantém apenas a sensibilidade base e os ajustes direcionais.",
+                    "",
+                    "5. GRÁFICO E EDITOR LUT",
+                    "O eixo horizontal representa a velocidade física de entrada em counts/ms. O eixo vertical representa a proporção entre saída e entrada. Um valor 2,00 significa aproximadamente o dobro da saída naquela velocidade.",
+                    "O marcador ao vivo mostra a região da curva alcançada pelo movimento atual. Valores muito altos fora da velocidade que você realmente atinge não serão percebidos.",
+                    "No modo LUT, arraste os pontos, adicione novos pontos ou remova o ponto selecionado. O último ponto determina onde a curva termina.",
+                    "",
+                    "6. AJUSTES AVANÇADOS",
+                    "Dispositivo e entrada: configure DPI e polling rate somente quando necessário. O valor 0 mantém a detecção automática onde ela estiver disponível.",
+                    "Suavização e estabilidade: valores maiores podem estabilizar leituras, mas a suavização de saída adiciona latência. Para jogos competitivos, comece em 0.",
+                    "Ajustes de eixos: permitem diferenças entre esquerda/direita e cima/baixo. Angle Snapping corrige movimentos próximos dos eixos e deve ser usado com cuidado.",
+                    "Driver e recuperação: teste a conexão, reaplique a configuração já salva ou desative a aceleração.",
+                    "",
+                    "7. SALVAR, APLICAR E RESTAURAR",
+                    "As alterações da página Gráficos só chegam ao driver depois de Salvar e aplicar. Restaurar padrões mostra uma prévia segura; o driver não é alterado até você confirmar com Salvar e aplicar.",
+                    "",
+                    "8. BANDEJA E ENCERRAMENTO",
+                    "O botão X oculta o aplicativo na área de notificação e mantém a aceleração ativa. Para encerrar e desativar a aceleração, clique com o botão direito no ícone da bandeja e escolha Fechar (desativar aceleração).",
+                    "",
+                    "9. ATUALIZAÇÕES",
+                    "A verificação automática pode ser controlada em Temas. Depois de uma atualização concluída, o aplicativo mostra as novidades e preserva perfis, configurações, idioma, tema e associações de dispositivos.",
+                    "",
+                    "10. MÉTODO RECOMENDADO DE TESTE",
+                    "1) Exporte o perfil atual.  2) Altere um parâmetro.  3) Salve e aplique.  4) Teste movimentos lentos e rápidos.  5) Observe o marcador do gráfico antes de continuar."
+                });
+            }
+
+            return String.Join(Environment.NewLine, new[]
+            {
+                "COMPLETE GUIDE",
+                "",
+                "1. BEFORE YOU START",
+                "Raw Accel Reimagined manages the interface, profiles and communication with the Raw Accel driver. Make gradual changes and keep a copy of important profiles.",
+                "",
+                "2. PROFILES AND DEVICES",
+                "• Choose the active profile from the selector at the top.",
+                "• In Advanced, you can create, duplicate, rename, import or export profiles.",
+                "• An associated mouse only uses its assigned profile. Editing another profile will not change that mouse.",
+                "• Keyboards that expose a mouse-capable interface may appear during detection. Mark them as Not a Mouse to hide them.",
+                "",
+                "3. MAIN CONTROLS",
+                "Sens Multiplier: changes base sensitivity at every speed. 1.00 preserves the original value.",
+                "Y / X Ratio: changes vertical sensitivity relative to horizontal sensitivity. 1.05 makes vertical output approximately 5% faster.",
+                "Rotation: rotates the axes used by directional calculations. It should normally remain at 0.",
+                "Vertical Response: Vertical Activation changes when vertical movement enters the curve; Vertical Accel Strength increases only the accelerated part of vertical movement.",
+                "",
+                "4. CHOOSING A CURVE",
+                "Natural: smooth and progressive growth. It is the simplest starting point.",
+                "Classic: mathematical control over rate, exponent, offset and cap.",
+                "Jump: creates a more direct transition between two sensitivity regions.",
+                "Synchronous: arranges sensitivity changes around a central speed.",
+                "Power: increases acceleration using an exponential curve.",
+                "LUT: free point-by-point editing without being restricted to one formula.",
+                "No Accel: keeps only base sensitivity and directional adjustments.",
+                "",
+                "5. GRAPH AND LUT EDITOR",
+                "The horizontal axis represents physical input speed in counts/ms. The vertical axis is the output-to-input ratio. A value of 2.00 means approximately twice the output at that speed.",
+                "The live marker shows the part of the curve reached by current movement. Very high values outside the speed you actually reach will not be felt.",
+                "In LUT mode, drag points, add points or remove the selected point. The final point controls where the curve ends.",
+                "",
+                "6. ADVANCED SETTINGS",
+                "Device & Input: configure DPI and polling rate only when needed. A value of 0 keeps automatic detection where available.",
+                "Smoothing & Stability: higher values may stabilize readings, but output smoothing adds latency. For competitive games, start at 0.",
+                "Axis Tuning: allows differences between left/right and up/down. Angle Snapping corrects movement near the axes and should be used carefully.",
+                "Driver & Recovery: test the connection, reapply the saved configuration or disable acceleration.",
+                "",
+                "7. SAVE, APPLY AND RESTORE",
+                "Changes on Charts only reach the driver after Save & Apply. Restore Defaults provides a safe preview; the driver is not changed until you confirm with Save & Apply.",
+                "",
+                "8. TRAY AND EXIT",
+                "The X button hides the application in the notification area and keeps acceleration active. To exit and disable acceleration, right-click the tray icon and choose Close (disable acceleration).",
+                "",
+                "9. UPDATES",
+                "Automatic update checks can be controlled under Themes. After a successful update, the application shows what changed and preserves profiles, settings, language, theme and device associations.",
+                "",
+                "10. RECOMMENDED TEST METHOD",
+                "1) Export the current profile.  2) Change one parameter.  3) Save & Apply.  4) Test slow and fast movements.  5) Watch the graph marker before continuing."
+            });
+        }
+
+        private string BuildFaqContent()
+        {
+            if (currentLanguage == "pt-BR")
+            {
+                return String.Join(Environment.NewLine, new[]
+                {
+                    "PERGUNTAS FREQUENTES",
+                    "",
+                    "Minha alteração não afetou o mouse.",
+                    "Confirme se clicou em Salvar e aplicar e se o mouse está associado ao perfil selecionado.",
+                    "",
+                    "Por que um valor LUT alto não deixa o mouse rápido?",
+                    "O ponto pode estar fora da velocidade que você realmente alcança, ou outro perfil pode controlar o mouse. Observe o marcador ao vivo.",
+                    "",
+                    "Posso usar valores decimais?",
+                    "Sim. Os campos aceitam ponto ou vírgula, por exemplo 1.05 ou 1,05.",
+                    "",
+                    "Fechar a janela desativa a aceleração?",
+                    "Não. O X envia o aplicativo para a bandeja. Use Fechar (desativar aceleração) no menu do ícone da bandeja.",
+                    "",
+                    "Por que um teclado aparece nos dispositivos?",
+                    "Alguns teclados expõem uma interface HID compatível com mouse. Use Não é um mouse para ocultá-lo localmente.",
+                    "",
+                    "Restaurar padrões altera o driver imediatamente?",
+                    "Não. Ele cria uma prévia. A alteração só chega ao driver depois de Salvar e aplicar.",
+                    "",
+                    "A atualização apaga meus perfis?",
+                    "Não. O atualizador preserva perfis, configurações, tema, idioma e associações de dispositivos.",
+                    "",
+                    "Onde devo ajustar diferenças entre cima e baixo?",
+                    "Use Proporção cima/baixo em Ajustes de eixos. Resposta vertical altera a entrada na curva e a força acelerada do eixo vertical como um todo."
+                });
+            }
+
+            return String.Join(Environment.NewLine, new[]
+            {
+                "FREQUENTLY ASKED QUESTIONS",
+                "",
+                "My change did not affect the mouse.",
+                "Confirm that you pressed Save & Apply and that the mouse is associated with the selected profile.",
+                "",
+                "Why does a high LUT value not make the mouse fast?",
+                "The point may be outside the speed you actually reach, or another profile may control the mouse. Watch the live marker.",
+                "",
+                "Can I use decimal values?",
+                "Yes. Fields accept a period or comma, for example 1.05 or 1,05.",
+                "",
+                "Does closing the window disable acceleration?",
+                "No. The X button sends the application to the tray. Use Close (disable acceleration) from the tray icon menu.",
+                "",
+                "Why does a keyboard appear under devices?",
+                "Some keyboards expose a mouse-capable HID interface. Use Not a Mouse to hide it locally.",
+                "",
+                "Does Restore Defaults change the driver immediately?",
+                "No. It creates a preview. The change only reaches the driver after Save & Apply.",
+                "",
+                "Does an update delete my profiles?",
+                "No. The updater preserves profiles, settings, theme, language and device associations.",
+                "",
+                "Where should I adjust differences between up and down?",
+                "Use Up / Down Ratio under Axis Tuning. Vertical Response changes curve entry and accelerated strength for the vertical axis as a whole."
+            });
+        }
+
+        private void OpenProject_Click(object sender, RoutedEventArgs e)
+        {
+            OpenHelpResource("https://github.com/diskcell/Raw-Accel-Reimagined");
+        }
+
+        private void OpenReleases_Click(object sender, RoutedEventArgs e)
+        {
+            OpenHelpResource("https://github.com/diskcell/Raw-Accel-Reimagined/releases");
+        }
+
+        private void OpenHelpResource(string target)
+        {
+            try
+            {
+                bool webTarget = Uri.IsWellFormedUriString(target, UriKind.Absolute);
+                if (!webTarget && !File.Exists(target))
+                    throw new FileNotFoundException(T("The requested help resource could not be found."), target);
+                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                string message = ex is FileNotFoundException
+                    ? T("The requested help resource could not be found.")
+                    : ex.Message;
+                MessageBox.Show(this, message, T("Unable to open help"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

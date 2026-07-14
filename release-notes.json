@@ -1,28 +1,26 @@
 {
-  "version": "1.8.2",
-  "releaseUrl": "https://github.com/diskcell/Raw-Accel-Reimagined/releases/tag/v1.8.2",
+  "version": "1.8.3",
+  "releaseUrl": "https://github.com/diskcell/Raw-Accel-Reimagined/releases/tag/v1.8.3",
   "notes": {
     "en": [
-      "Fixed LUT decimal parsing on systems that use a comma as the decimal separator.",
-      "Fixed LUT points disappearing or changing after Save & Apply.",
-      "Preserved the selected LUT point and curve preview after applying.",
-      "Added a highlighted final LUT point to clarify where the curve ends.",
-      "Added draggable Classic curve controls and corrected the Classic Shape and Classic Cap directions.",
-      "Added a clear profile assignment notice showing which mouse is controlled by the selected profile.",
-      "Changed Reset into Restore Defaults with a safe preview before Save & Apply.",
-      "Replaced Windows notification boxes and sounds with silent, themed in-app dialogs.",
-      "Added a bilingual What's New pop-up shown after a successful automatic update."
+      "Major memory optimization: local private-memory measurements dropped from about 182 MB to 99 MB by using a lighter rendering path.",
+      "When hidden in the system tray, the resident working set is now released and measured about 2-18 MB locally instead of about 111 MB.",
+      "Memory remained stable during repeated navigation and guide usage; no application memory leak was detected.",
+      "Added a complete bilingual Help Center inside the application.",
+      "Added Getting Started instructions, curve explanations, common questions, live application status and quick navigation.",
+      "The Complete Guide and FAQ now open in a themed in-app viewer instead of launching VS Code or another external Markdown editor.",
+      "Added complete built-in guide and FAQ content in English and Brazilian Portuguese.",
+      "Mouse acceleration formulas, driver communication and saved profile behavior were not changed by the memory optimizations."
     ],
     "pt-BR": [
-      "Corrigida a leitura de decimais LUT em sistemas que utilizam vírgula como separador decimal.",
-      "Corrigidos os pontos LUT que desapareciam ou mudavam após Salvar e aplicar.",
-      "Preservados o ponto LUT selecionado e a prévia da curva depois da aplicação.",
-      "Adicionado destaque ao ponto final LUT para esclarecer onde a curva termina.",
-      "Adicionados controles arrastáveis para a curva Clássica e corrigidas as direções de Forma Clássica e Limite Clássico.",
-      "Adicionado um aviso claro de associação mostrando qual mouse é controlado pelo perfil selecionado.",
-      "Redefinir foi substituído por Restaurar padrões, com uma prévia segura antes de Salvar e aplicar.",
-      "As caixas e os sons de notificação do Windows foram substituídos por diálogos silenciosos e tematizados dentro do aplicativo.",
-      "Adicionado um pop-up bilíngue de Novidades depois de uma atualização automática concluída."
+      "Grande otimização de memória: nas medições locais, a memória privada caiu de aproximadamente 182 MB para 99 MB usando uma renderização mais leve.",
+      "Quando escondido na bandeja, o conjunto de trabalho residente agora é liberado e mediu cerca de 2-18 MB localmente, em vez de aproximadamente 111 MB.",
+      "A memória permaneceu estável durante navegação e uso repetido do guia; nenhum vazamento de memória do aplicativo foi detectado.",
+      "Adicionada uma Central de Ajuda completa e bilíngue dentro do aplicativo.",
+      "Adicionados primeiros passos, explicações das curvas, dúvidas comuns, status do aplicativo e navegação rápida.",
+      "O Guia completo e o FAQ agora abrem em um visualizador tematizado dentro do aplicativo, sem iniciar o VS Code ou outro editor Markdown externo.",
+      "Adicionado conteúdo completo do guia e FAQ em inglês e português brasileiro.",
+      "As fórmulas de aceleração do mouse, a comunicação com o driver e o comportamento dos perfis salvos não foram alterados pelas otimizações de memória."
     ]
   }
 }
