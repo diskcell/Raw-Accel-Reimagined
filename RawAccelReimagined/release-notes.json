@@ -1,0 +1,28 @@
+{
+  "version": "1.8.2",
+  "releaseUrl": "https://github.com/diskcell/Raw-Accel-Reimagined/releases/tag/v1.8.2",
+  "notes": {
+    "en": [
+      "Fixed LUT decimal parsing on systems that use a comma as the decimal separator.",
+      "Fixed LUT points disappearing or changing after Save & Apply.",
+      "Preserved the selected LUT point and curve preview after applying.",
+      "Added a highlighted final LUT point to clarify where the curve ends.",
+      "Added draggable Classic curve controls and corrected the Classic Shape and Classic Cap directions.",
+      "Added a clear profile assignment notice showing which mouse is controlled by the selected profile.",
+      "Changed Reset into Restore Defaults with a safe preview before Save & Apply.",
+      "Replaced Windows notification boxes and sounds with silent, themed in-app dialogs.",
+      "Added a bilingual What's New pop-up shown after a successful automatic update."
+    ],
+    "pt-BR": [
+      "Corrigida a leitura de decimais LUT em sistemas que utilizam vírgula como separador decimal.",
+      "Corrigidos os pontos LUT que desapareciam ou mudavam após Salvar e aplicar.",
+      "Preservados o ponto LUT selecionado e a prévia da curva depois da aplicação.",
+      "Adicionado destaque ao ponto final LUT para esclarecer onde a curva termina.",
+      "Adicionados controles arrastáveis para a curva Clássica e corrigidas as direções de Forma Clássica e Limite Clássico.",
+      "Adicionado um aviso claro de associação mostrando qual mouse é controlado pelo perfil selecionado.",
+      "Redefinir foi substituído por Restaurar padrões, com uma prévia segura antes de Salvar e aplicar.",
+      "As caixas e os sons de notificação do Windows foram substituídos por diálogos silenciosos e tematizados dentro do aplicativo.",
+      "Adicionado um pop-up bilíngue de Novidades depois de uma atualização automática concluída."
+    ]
+  }
+}

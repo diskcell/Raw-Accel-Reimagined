@@ -27,7 +27,8 @@ if ($LASTEXITCODE -ne 0) { throw 'The main application build failed.' }
 & $msbuild (Join-Path $root 'updater\RawAccelUpdater.csproj') /t:Rebuild /p:Configuration=Release /p:Platform=x64 /v:minimal
 if ($LASTEXITCODE -ne 0) { throw 'The updater build failed.' }
 
-$builtVersion = (Get-Item -LiteralPath (Join-Path $root 'modern-ui\bin\Release\RawAccelReimagined.exe')).VersionInfo.FileVersion
+$runtime = Join-Path $root 'RawAccelReimagined'
+$builtVersion = (Get-Item -LiteralPath (Join-Path $runtime 'RawAccelReimagined.exe')).VersionInfo.FileVersion
 if (-not $builtVersion.StartsWith("$Version.")) {
     throw "The application file version ($builtVersion) does not match the release tag ($Version)."
 }
@@ -38,16 +39,16 @@ if (Test-Path -LiteralPath $checksum) { Remove-Item -LiteralPath $checksum -Forc
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
 $files = @(
-    @{ Source = 'modern-ui\bin\Release\RawAccelReimagined.exe'; Target = 'RawAccelReimagined.exe' },
-    @{ Source = 'modern-ui\RawAccelModern.exe.config'; Target = 'RawAccelReimagined.exe.config' },
-    @{ Source = 'updater\bin\Release\RawAccelUpdater.exe'; Target = 'RawAccelUpdater.exe' },
-    @{ Source = 'Newtonsoft.Json.dll'; Target = 'Newtonsoft.Json.dll' },
-    @{ Source = 'wrapper.dll'; Target = 'wrapper.dll' },
-    @{ Source = 'writer.exe'; Target = 'writer.exe' },
-    @{ Source = 'rawaccel.exe'; Target = 'rawaccel.exe' },
-    @{ Source = 'installer.exe'; Target = 'installer.exe' },
-    @{ Source = 'uninstaller.exe'; Target = 'uninstaller.exe' },
-    @{ Source = 'settings.example.json'; Target = 'settings.example.json' },
+    @{ Source = 'RawAccelReimagined\RawAccelReimagined.exe'; Target = 'RawAccelReimagined.exe' },
+    @{ Source = 'RawAccelReimagined\RawAccelReimagined.exe.config'; Target = 'RawAccelReimagined.exe.config' },
+    @{ Source = 'RawAccelReimagined\RawAccelUpdater.exe'; Target = 'RawAccelUpdater.exe' },
+    @{ Source = 'RawAccelReimagined\Newtonsoft.Json.dll'; Target = 'Newtonsoft.Json.dll' },
+    @{ Source = 'RawAccelReimagined\wrapper.dll'; Target = 'wrapper.dll' },
+    @{ Source = 'RawAccelReimagined\writer.exe'; Target = 'writer.exe' },
+    @{ Source = 'RawAccelReimagined\installer.exe'; Target = 'installer.exe' },
+    @{ Source = 'RawAccelReimagined\uninstaller.exe'; Target = 'uninstaller.exe' },
+    @{ Source = 'RawAccelReimagined\settings.example.json'; Target = 'settings.example.json' },
+    @{ Source = 'RawAccelReimagined\release-notes.json'; Target = 'release-notes.json' },
     @{ Source = 'LICENSE'; Target = 'LICENSE' },
     @{ Source = 'ReadMe.md'; Target = 'ReadMe.md' }
 )
@@ -61,9 +62,8 @@ foreach ($file in $files) {
     Copy-Item -LiteralPath $source -Destination $target -Force
 }
 
-Copy-Item -LiteralPath (Join-Path $root 'driver') -Destination (Join-Path $stage 'driver') -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $root 'doc') -Destination (Join-Path $stage 'doc') -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $root 'themes') -Destination (Join-Path $stage 'themes') -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $runtime 'driver') -Destination (Join-Path $stage 'driver') -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $runtime 'doc') -Destination (Join-Path $stage 'doc') -Recurse -Force
 
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $package -CompressionLevel Optimal
 $hash = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash.ToLowerInvariant()

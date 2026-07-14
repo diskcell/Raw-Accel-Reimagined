@@ -213,6 +213,7 @@
     </Style>
   </Window.Resources>
 
+  <Grid>
   <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="*"/><RowDefinition Height="42"/></Grid.RowDefinitions>
@@ -223,7 +224,7 @@
           <Image Source="branding/raw-accel-reimagined-logo.png" Width="46" Height="46" Stretch="Uniform" Margin="0,0,14,0" />
           <TextBlock Text="Raw Accel Reimagined" FontSize="21" FontWeight="SemiBold" />
           <Border Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="10" Margin="14,0,0,0" Padding="10,4" VerticalAlignment="Center">
-            <TextBlock x:Name="AppVersionText" Text="v1.8.1" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
+            <TextBlock x:Name="AppVersionText" Text="v1.8.2" Foreground="{DynamicResource AccentHoverBrush}" FontSize="12" FontWeight="SemiBold" />
           </Border>
         </StackPanel>
         <Grid Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="540">
@@ -271,6 +272,13 @@
             <Border Style="{StaticResource Card}">
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><TextBlock Text="Curve / Profile" Foreground="#AAB7CA"/><Button Style="{StaticResource InfoButton}" Tag="Curve / Profile"/></StackPanel>
+                <Border x:Name="ProfileAssignmentNotice" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="11,9" Margin="0,0,0,10">
+                  <StackPanel>
+                    <TextBlock Text="Mouse profile assignment" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock Text="A mouse associated with a profile only uses that assigned profile." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,3,0,0"/>
+                    <TextBlock x:Name="ProfileAssignmentStatus" Text="Checking the selected profile..." TextWrapping="Wrap" Foreground="{DynamicResource AccentHoverBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                  </StackPanel>
+                </Border>
                 <ComboBox x:Name="ModeBox" Height="42" SelectionChanged="ModeBox_SelectionChanged"><ComboBoxItem Content="Natural" Tag="natural"/><ComboBoxItem Content="Classic" Tag="classic"/><ComboBoxItem Content="Jump" Tag="jump"/><ComboBoxItem Content="Synchronous" Tag="synchronous"/><ComboBoxItem Content="Power" Tag="power"/><ComboBoxItem Content="LUT" Tag="lut"/><ComboBoxItem Content="No Accel" Tag="noaccel"/></ComboBox>
                 <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
                   <Button x:Name="FreeEditButton" Height="38" Style="{StaticResource ModernButton}" Content="Convert to Free Edit (LUT)" Click="ConvertToFreeEdit_Click" />
@@ -304,6 +312,43 @@
               </StackPanel>
             </Border>
 
+            <Border x:Name="ClassicParametersCard" Style="{StaticResource Card}" Visibility="Collapsed">
+              <StackPanel>
+                <StackPanel Margin="0,0,0,12">
+                  <TextBlock Text="Classic Curve Parameters" FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock Text="Quake-style curve with configurable rate, exponent, threshold and cap" TextWrapping="Wrap" Foreground="#718198" FontSize="11" Margin="0,3,0,0" />
+                </StackPanel>
+                <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <StackPanel Orientation="Horizontal"><TextBlock Text="Gain" FontSize="16" FontWeight="SemiBold"/><Button Style="{StaticResource InfoButton}" Tag="Gain"/></StackPanel>
+                  <CheckBox x:Name="ClassicGainToggle" Grid.Column="1" Content=" ON" Foreground="#E7EDF6" VerticalAlignment="Center"/>
+                </Grid>
+                <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="105"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="↗  Acceleration Rate" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ClassicAccelerationBox" Grid.Column="1"/><TextBlock x:Name="ClassicAccelerationCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
+                  <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Acceleration Rate" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                </Grid>
+                <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="105"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="xⁿ  Classic Exponent" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ClassicExponentBox" Grid.Column="1"/><TextBlock x:Name="ClassicExponentCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
+                  <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Classic Exponent" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                </Grid>
+                <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="105"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="⌖  Input Offset" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ClassicOffsetBox" Grid.Column="1"/><TextBlock x:Name="ClassicOffsetCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
+                  <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Input Offset" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                </Grid>
+                <Grid Margin="0,7,0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="170"/></Grid.ColumnDefinitions>
+                  <StackPanel Orientation="Horizontal"><TextBlock Text="Cap Mode" Style="{StaticResource FieldLabel}"/><Button Style="{StaticResource InfoButton}" Tag="Cap Mode"/></StackPanel>
+                  <ComboBox x:Name="ClassicCapModeBox" Grid.Column="1" Height="38" SelectionChanged="CurveParameter_SelectionChanged"><ComboBoxItem Content="Input &amp; Output" Tag="in_out"/><ComboBoxItem Content="Input" Tag="input"/><ComboBoxItem Content="Output" Tag="output"/></ComboBox>
+                </Grid>
+                <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="105"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="→  Input Cap" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ClassicCapInputBox" Grid.Column="1"/><TextBlock x:Name="ClassicCapInputCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
+                  <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Input Cap" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                </Grid>
+                <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="105"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="↑  Output Cap" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ClassicCapOutputBox" Grid.Column="1"/><TextBlock x:Name="ClassicCapOutputCurrent" Grid.Column="2" Style="{StaticResource CurrentValue}"/>
+                  <Button Grid.Column="0" Style="{StaticResource InfoButton}" Tag="Output Cap" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
             <Border x:Name="CurveModeNotice" Style="{StaticResource Card}" Visibility="Collapsed">
               <StackPanel>
                 <TextBlock x:Name="CurveModeNoticeTitle" Text="Mode-specific editor pending" FontSize="16" FontWeight="SemiBold" />
@@ -315,6 +360,7 @@
               <StackPanel>
                 <TextBlock Text="Free Curve Editor (LUT)" FontSize="16" FontWeight="SemiBold" />
                 <TextBlock Text="Drag points in any direction. Values are saved only after Save &amp; Apply." TextWrapping="Wrap" Foreground="#718198" FontSize="11" Margin="0,3,0,9" />
+                <TextBlock Text="The final point controls where the curve ends." TextWrapping="Wrap" Foreground="#A77AF4" FontSize="11" Margin="0,0,0,7" />
                 <TextBlock x:Name="LutPointsSummary" Text="0 editable points" Foreground="#8FA0B8" FontSize="11" />
                 <TextBox x:Name="LutPointsBox" IsReadOnly="True" TextWrapping="Wrap" Height="58" VerticalScrollBarVisibility="Auto" Margin="0,5,0,9" FontSize="11" />
                 <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -338,7 +384,7 @@
             </Border>
             <Grid Margin="12,2,12,4"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
               <Button x:Name="SaveAndApplyButton" Grid.Column="0" Height="48" Style="{StaticResource AccentButton}" Click="Apply_Click" Content="✓  Save &amp; Apply"/>
-              <Button Grid.Column="2" Height="48" Style="{StaticResource ModernButton}" Click="Reset_Click" Content="↻  Reset" FontSize="15"/>
+              <Button Grid.Column="2" Height="48" Style="{StaticResource ModernButton}" Click="Reset_Click" Content="↻  Restore Defaults" FontSize="15"/>
             </Grid>
           </StackPanel>
         </ScrollViewer>
@@ -560,7 +606,7 @@
                   <TextBlock Text="Application Updates" FontSize="18" FontWeight="SemiBold" />
                   <Ellipse Fill="{DynamicResource AccentBrush}" Width="10" Height="10" Margin="10,1,0,0" />
                 </StackPanel>
-                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.1 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
+                <TextBlock x:Name="InstalledVersionText" Grid.Row="1" Text="Installed version: 1.8.2 • Stable channel" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
                 <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
                   <CheckBox x:Name="AutoUpdateCheckBox" Content=" Automatically check for updates" IsChecked="True" Checked="AutoUpdateCheckBox_Changed" Unchecked="AutoUpdateCheckBox_Changed" />
                 </StackPanel>
@@ -578,4 +624,45 @@
       </Grid>
     </Grid>
   </Border>
+
+  <Grid x:Name="WhatsNewOverlay" Background="#C0000000" Visibility="Collapsed" Panel.ZIndex="500">
+    <Border Width="720" MaxHeight="650" HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource AccentBrush}"
+            BorderThickness="1" CornerRadius="18">
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="7"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Background="{DynamicResource AccentBrush}" CornerRadius="18,18,0,0"/>
+
+        <Grid Grid.Row="1" Margin="30,24,30,18">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <Border Width="48" Height="48" CornerRadius="24" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+            <TextBlock Text="✓" Foreground="{DynamicResource AccentHoverBrush}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+          </Border>
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock x:Name="WhatsNewTitle" Text="What's New" FontSize="24" FontWeight="SemiBold"/>
+            <TextBlock x:Name="WhatsNewSubtitle" Text="Updated successfully" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,0"/>
+          </StackPanel>
+          <Border Grid.Column="2" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
+            <TextBlock x:Name="WhatsNewVersion" Text="v1.8.2" Foreground="{DynamicResource AccentHoverBrush}" FontSize="13" FontWeight="SemiBold"/>
+          </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Margin="30,0" Padding="20,17" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="11" MinHeight="180" MaxHeight="410">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <TextBlock x:Name="WhatsNewNotes" TextWrapping="Wrap" FontSize="14" LineHeight="23"/>
+          </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="30,18,30,26">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="46"/></Grid.RowDefinitions>
+          <TextBlock Text="Your profiles and settings were preserved." Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="2,0,0,13"/>
+          <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <Button x:Name="WhatsNewReleaseButton" Style="{StaticResource ModernButton}" Content="View release details" Click="WhatsNewRelease_Click"/>
+            <Button Grid.Column="2" Style="{StaticResource AccentButton}" Content="Continue" Click="CloseWhatsNew_Click"/>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+  </Grid>
 </Window>

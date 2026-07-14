@@ -39,5 +39,5 @@ jobs:
             "artifacts/Raw-Accel-Reimagined-Windows-x64.zip" `
             "artifacts/Raw-Accel-Reimagined-Windows-x64.zip.sha256" `
             --verify-tag `
-            --generate-notes `
+            --notes-file "RELEASE_NOTES.md" `
             --title "Raw Accel Reimagined $env:RELEASE_VERSION"

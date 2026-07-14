@@ -22,6 +22,7 @@ modern-ui/rawaccel-modern.ico
 updater/bin/
 updater/obj/
 artifacts/
+RawAccelReimagined/*.pdb
 
 # IDE and OS files
 .vs/

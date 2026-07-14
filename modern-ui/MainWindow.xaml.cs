@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,11 +20,13 @@ using Newtonsoft.Json.Linq;
 using IOPath = System.IO.Path;
 using Drawing = System.Drawing;
 using WinForms = System.Windows.Forms;
+using MessageBox = RawAccelModern.AppDialog;
 
 namespace RawAccelModern
 {
     public partial class MainWindow : Window
     {
+        internal bool IsPortugueseLanguage { get { return currentLanguage == "pt-BR"; } }
         private string rootDirectory;
         private string settingsPath;
         private JObject settings;
@@ -59,6 +62,7 @@ namespace RawAccelModern
         private bool changingLanguage;
         private bool autoCheckUpdates = true;
         private bool updateCheckRunning;
+        private string whatsNewReleaseUrl;
         private string currentTheme = "dark-blue";
         private readonly HashSet<string> ignoredDeviceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private int lastMouseDx;
@@ -66,6 +70,7 @@ namespace RawAccelModern
         private string activeCurveHandle;
         private Point curveDragStart;
         private double curveDragStartValue;
+        private double curveDragStartSecondaryValue;
         private int lastCurveDragRenderTick;
         private readonly List<Point> lutWorkingPoints = new List<Point>();
         private int activeLutPointIndex = -1;
@@ -98,6 +103,9 @@ namespace RawAccelModern
             { "Associate Profile", "Associar perfil" },
             { "Use Default", "Usar padrão" },
             { "Assigned profile", "Perfil associado" },
+            { "Mouse profile assignment", "Associação de perfil do mouse" },
+            { "A mouse associated with a profile only uses that assigned profile.", "Um mouse associado a um perfil utiliza somente o perfil atribuído a ele." },
+            { "Checking the selected profile...", "Verificando o perfil selecionado..." },
             { "Device profile applied", "Perfil do dispositivo aplicado" },
             { "Device returned to default settings", "Dispositivo retornou às configurações padrão" },
             { "Device association was not applied", "A associação do dispositivo não foi aplicada" },
@@ -190,6 +198,12 @@ namespace RawAccelModern
             { "Application Updates", "Atualizações do aplicativo" },
             { "Automatically check for updates", "Verificar atualizações automaticamente" },
             { "Check for Updates", "Verificar atualizações" },
+            { "What's New", "Novidades" },
+            { "Updated successfully", "Atualizado com sucesso" },
+            { "Your profiles and settings were preserved.", "Seus perfis e configurações foram preservados." },
+            { "View release details", "Ver detalhes da versão" },
+            { "Continue", "Continuar" },
+            { "This update was installed successfully. Open the release details to see the complete list of changes.", "Esta atualização foi instalada com sucesso. Abra os detalhes da versão para ver a lista completa de mudanças." },
             { "Acceleration", "Aceleração" },
             { "Last (x, y): (0, 0)", "Último (x, y): (0, 0)" },
             { "Current", "Atual" },
@@ -201,6 +215,8 @@ namespace RawAccelModern
             { "Natural", "Natural" },
             { "Natural Curve Parameters", "Parâmetros da curva Natural" },
             { "Smooth progressive curve with a configurable start, rise and ceiling", "Curva progressiva suave com início, subida e limite configuráveis" },
+            { "Classic Curve Parameters", "Parâmetros da curva Clássica" },
+            { "Quake-style curve with configurable rate, exponent, threshold and cap", "Curva no estilo Quake com taxa, expoente, limiar e limite configuráveis" },
             { "Mode-specific editor pending", "Editor específico do modo pendente" },
             { "Existing parameters are preserved when applying. A dedicated editor will be added in a separate tested stage.", "Os parâmetros existentes são preservados ao aplicar. Um editor dedicado será adicionado em uma etapa separada e testada." },
             { "No acceleration parameters", "Sem parâmetros de aceleração" },
@@ -211,6 +227,12 @@ namespace RawAccelModern
             { "Power", "Potência" },
             { "No Accel", "Sem aceleração" },
             { "Gain", "Ganho" },
+            { "Acceleration Rate", "Taxa de aceleração" },
+            { "Classic Exponent", "Expoente clássico" },
+            { "Cap Mode", "Modo do limite" },
+            { "Input & Output", "Entrada e saída" },
+            { "Input Cap", "Limite de entrada" },
+            { "Output Cap", "Limite de saída" },
             { "Decay Rate", "Taxa de decaimento" },
             { "Input Offset", "Deslocamento de entrada" },
             { "Limit", "Limite" },
@@ -221,19 +243,29 @@ namespace RawAccelModern
             { "Decimals: 1.05 or 1,05", "Decimais: 1.05 ou 1,05" },
             { "Apply", "Aplicar" },
             { "Reset", "Redefinir" },
+            { "↻  Restore Defaults", "↻  Restaurar padrões" },
+            { "Restore Defaults", "Restaurar padrões" },
             { "Sensitivity", "Sensibilidade" },
             { "✓  Save & Apply", "✓  Salvar e aplicar" },
             { "Save & Apply", "Salvar e aplicar" },
             { "Drag Natural handles, then press Save & Apply", "Arraste os controles Natural e depois clique em Salvar e aplicar" },
+            { "Drag Classic handles, then press Save & Apply", "Arraste os controles Clássicos e depois clique em Salvar e aplicar" },
             { "Drag LUT points freely, then press Save & Apply", "Arraste livremente os pontos LUT e depois clique em Salvar e aplicar" },
             { "Convert this curve to LUT for free editing", "Converta esta curva para LUT para editar livremente" },
             { "Pending — press Save & Apply", "Pendente — clique em Salvar e aplicar" },
             { "Curve Start", "Início da curva" },
             { "Curve Rise", "Subida da curva" },
             { "Curve Limit", "Limite da curva" },
+            { "Classic Start", "Início Clássico" },
+            { "Classic Rate", "Taxa Clássica" },
+            { "Classic Shape", "Formato Clássico" },
+            { "Classic Cap", "Limite Clássico" },
             { "Convert to Free Edit (LUT)", "Converter para edição livre (LUT)" },
             { "Free Curve Editor (LUT)", "Editor de curva livre (LUT)" },
             { "Drag points in any direction. Values are saved only after Save & Apply.", "Arraste os pontos em qualquer direção. Os valores são salvos somente após Salvar e aplicar." },
+            { "The final point controls where the curve ends.", "O ponto final controla onde a curva termina." },
+            { "Final Level", "Nível final" },
+            { "The LUT points could not be persisted correctly.", "Os pontos LUT não puderam ser salvos corretamente." },
             { "editable points", "pontos editáveis" },
             { "Add Point", "Adicionar ponto" },
             { "Remove Selected", "Remover selecionado" },
@@ -288,7 +320,7 @@ namespace RawAccelModern
             { "Close (disable acceleration)", "Fechar (desativar aceleração)" },
             { "Raw Accel is still active", "Raw Accel continua ativo" },
             { "Double-click to open or right-click to close.", "Clique duas vezes para abrir ou use o botão direito para fechar." },
-            { "The modern interface uses the reference palette. Classic themes remain available in the original rawaccel.exe.", "A interface moderna usa a paleta de referência. Os temas clássicos continuam disponíveis no rawaccel.exe original." },
+            { "The modern interface uses the selected modern palette.", "A interface moderna usa a paleta moderna selecionada." },
             { "Unable to load the Raw Accel configuration.", "Não foi possível carregar a configuração do Raw Accel." },
             { "The program was not closed because it could not disable acceleration in the driver.", "O programa não foi encerrado porque não conseguiu desativar a aceleração no driver." },
             { "No configuration was applied.", "Nenhuma configuração foi aplicada." },
@@ -306,6 +338,7 @@ namespace RawAccelModern
             ,{ "No profiles were found in settings.json.", "Nenhum perfil foi encontrado em settings.json." }
             ,{ "defaultDeviceConfig was not found.", "defaultDeviceConfig não foi encontrado." }
             ,{ "The configuration was rejected by the original Raw Accel engine.", "A configuração foi recusada pelo motor original do Raw Accel." }
+            ,{ "Classic parameters cannot be negative, and the exponent must be greater than zero.", "Os parâmetros Clássicos não podem ser negativos e o expoente deve ser maior que zero." }
         };
 
         private static readonly Dictionary<string, string> HelpTextEnglish = new Dictionary<string, string>
@@ -323,12 +356,17 @@ namespace RawAccelModern
             { "Sens Multiplier", "Multiplies the final mouse output at every speed. 1.00 keeps the base sensitivity; 1.20 makes all movement about 20% faster." },
             { "Y / X Ratio", "Changes vertical sensitivity relative to horizontal sensitivity, equally for up and down. 1.05 makes vertical output about 5% faster." },
             { "Rotation", "Rotates the reference axes used by horizontal, vertical and directional adjustments. Keep it at 0 unless your natural mouse movement is tilted." },
-            { "Curve / Profile", "Selects the mathematical acceleration curve. Natural now has a dedicated editor for Decay Rate, Input Offset and Limit. No Accel hides curve parameters. Other modes preserve their stored parameters until their dedicated editors are implemented." },
+            { "Curve / Profile", "Selects the mathematical acceleration curve. Natural and Classic have dedicated parameter editors. No Accel hides curve parameters. Jump, Synchronous and Power preserve their stored parameters until their dedicated editors are implemented." },
             { "Convert to Free Edit (LUT)", "Samples the curve currently visible and converts it to editable LUT points. This works from Natural, Classic, Jump, Synchronous, Power or LUT. Arbitrary point editing cannot remain mathematically Classic or Natural, so conversion requires confirmation and is not saved until Apply." },
             { "Gain", "When enabled, the selected shape is applied as gain—the rate at which output velocity changes—instead of directly as sensitivity. This can significantly change the feel of the same curve." },
             { "Decay Rate", "Controls how quickly the Natural curve rises toward its limit after acceleration begins. Higher values make the transition happen sooner and more aggressively." },
             { "Input Offset", "Sets the input speed threshold before acceleration begins. Below this speed, movement stays close to the base sensitivity." },
             { "Limit", "Sets the upper strength or ceiling approached by the acceleration curve. Higher values allow a larger difference between slow and fast movements." },
+            { "Acceleration Rate", "Controls how strongly the Classic curve rises as mouse speed increases. Small changes can have a large effect when combined with a high exponent." },
+            { "Classic Exponent", "Controls the mathematical shape of the Classic curve. 2.00 reproduces a linear-style rise; higher values make acceleration increase more sharply at high speed." },
+            { "Cap Mode", "Chooses whether the Classic cap is defined by input speed, output ratio, or both. Input & Output lets the original engine reconcile both values." },
+            { "Input Cap", "Sets the input speed at which the Classic curve stops adding acceleration. It is used according to the selected Cap Mode." },
+            { "Output Cap", "Sets the maximum output ratio for the Classic curve. It is used according to the selected Cap Mode." },
             { "Vertical Activation", "Changes how quickly vertical movement advances through the acceleration curve. Above 1.00 makes vertical acceleration activate earlier; below 1.00 makes it activate later. It affects both up and down." },
             { "Vertical Accel Strength", "Scales only the accelerated part of vertical movement. Above 1.00 makes fast vertical movement gain more acceleration without directly increasing the base vertical sensitivity." },
             { "Mouse DPI", "Normalizes input speed using the physical DPI of the mouse. Set the real DPI to make profiles more consistent between mice; use 0 to disable normalization." },
@@ -358,12 +396,17 @@ namespace RawAccelModern
             { "Sens Multiplier", "Multiplica a saída final do mouse em qualquer velocidade. 1,00 mantém a sensibilidade base; 1,20 deixa todos os movimentos aproximadamente 20% mais rápidos." },
             { "Y / X Ratio", "Altera a sensibilidade vertical em relação à horizontal, igualmente para cima e para baixo. 1,05 deixa a saída vertical aproximadamente 5% mais rápida." },
             { "Rotation", "Gira os eixos de referência usados nos ajustes horizontais, verticais e direcionais. Mantenha em 0, exceto se o movimento natural da sua mão for inclinado." },
-            { "Curve / Profile", "Seleciona a curva matemática de aceleração. Natural agora possui um editor dedicado para Taxa de decaimento, Deslocamento de entrada e Limite. Sem aceleração oculta os parâmetros da curva. Os outros modos preservam seus parâmetros até receberem editores dedicados." },
+            { "Curve / Profile", "Seleciona a curva matemática de aceleração. Natural e Clássico possuem editores de parâmetros dedicados. Sem aceleração oculta os parâmetros da curva. Salto, Síncrono e Potência preservam seus valores até receberem editores dedicados." },
             { "Convert to Free Edit (LUT)", "Amostra a curva atualmente visível e a converte em pontos LUT editáveis. Funciona a partir de Natural, Clássico, Salto, Síncrono, Potência ou LUT. Uma edição arbitrária não pode continuar matematicamente Clássica ou Natural, por isso a conversão exige confirmação e só é salva após Aplicar." },
             { "Gain", "Quando ativado, o formato selecionado é aplicado como ganho — a taxa de mudança da velocidade de saída — em vez de ser aplicado diretamente como sensibilidade. Isso pode mudar bastante a sensação da mesma curva." },
             { "Decay Rate", "Controla a rapidez com que a curva Natural sobe em direção ao limite após o início da aceleração. Valores maiores tornam a transição mais rápida e agressiva." },
             { "Input Offset", "Define a velocidade de entrada necessária para a aceleração começar. Abaixo dessa velocidade, o movimento permanece próximo da sensibilidade base." },
             { "Limit", "Define a força máxima ou o teto aproximado pela curva de aceleração. Valores maiores permitem uma diferença maior entre movimentos lentos e rápidos." },
+            { "Acceleration Rate", "Controla a intensidade com que a curva Clássica sobe conforme a velocidade do mouse aumenta. Pequenas alterações podem causar grande efeito quando combinadas com um expoente alto." },
+            { "Classic Exponent", "Controla o formato matemático da curva Clássica. 2,00 reproduz uma subida do tipo linear; valores maiores concentram mais aceleração nas velocidades altas." },
+            { "Cap Mode", "Escolhe se o limite Clássico será definido pela velocidade de entrada, pela proporção de saída ou por ambos. Entrada e saída permite que o motor original concilie os dois valores." },
+            { "Input Cap", "Define a velocidade de entrada na qual a curva Clássica para de adicionar aceleração. É usado conforme o Modo do limite selecionado." },
+            { "Output Cap", "Define a proporção máxima de saída da curva Clássica. É usado conforme o Modo do limite selecionado." },
             { "Vertical Activation", "Muda a rapidez com que o movimento vertical avança pela curva de aceleração. Acima de 1,00 faz a aceleração vertical começar antes; abaixo de 1,00 faz começar depois. Afeta igualmente cima e baixo." },
             { "Vertical Accel Strength", "Multiplica somente a parte acelerada do movimento vertical. Acima de 1,00 adiciona mais aceleração aos movimentos verticais rápidos sem aumentar diretamente a sensibilidade vertical base." },
             { "Mouse DPI", "Normaliza a velocidade de entrada usando o DPI físico do mouse. Informe o DPI real para tornar os perfis mais consistentes entre mouses; use 0 para desativar a normalização." },
@@ -617,6 +660,7 @@ namespace RawAccelModern
             if (IsLoaded && settings != null && DetectedDevicesPanel != null) RefreshConnectedDevices();
             UpdateThemeSelection();
             UpdateNavigationAppearance();
+            UpdateProfileAssignmentNotice();
         }
 
         private Color ThemeColor(string role)
@@ -844,7 +888,7 @@ namespace RawAccelModern
                 });
                 UpdateDownload download = await UpdateService.DownloadAsync(update, progress);
                 if (InstalledVersionText != null) InstalledVersionText.Text = T("Preparing installation...");
-                StartUpdateInstaller(download.PackagePath, versionText);
+                StartUpdateInstaller(download.PackagePath, update);
             }
             catch (Exception ex)
             {
@@ -868,7 +912,7 @@ namespace RawAccelModern
             }
         }
 
-        private void StartUpdateInstaller(string packagePath, string version)
+        private void StartUpdateInstaller(string packagePath, UpdateInfo update)
         {
             string installedUpdater = IOPath.Combine(rootDirectory, "RawAccelUpdater.exe");
             if (!File.Exists(installedUpdater))
@@ -881,6 +925,8 @@ namespace RawAccelModern
             string temporaryUpdater = IOPath.Combine(temporaryDirectory, "RawAccelUpdater.exe");
             File.Copy(installedUpdater, temporaryUpdater, true);
 
+            string version = UpdateService.FormatVersion(update.Version);
+            SavePendingUpdateAnnouncement(update);
             string normalizedRoot = new DirectoryInfo(rootDirectory).FullName;
             string arguments = "--package " + WindowsCommandLine.QuoteArgument(packagePath) +
                 " --target " + WindowsCommandLine.QuoteArgument(normalizedRoot) +
@@ -898,15 +944,164 @@ namespace RawAccelModern
             Close();
         }
 
+        private static string GetUpdateAnnouncementPath()
+        {
+            return IOPath.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "RawAccelReimagined", "pending-update-announcement.json");
+        }
+
+        private static void SavePendingUpdateAnnouncement(UpdateInfo update)
+        {
+            try
+            {
+                string path = GetUpdateAnnouncementPath();
+                Directory.CreateDirectory(IOPath.GetDirectoryName(path));
+                string notes = update.ReleaseNotes ?? String.Empty;
+                if (notes.Length > 30000) notes = notes.Substring(0, 30000);
+                JObject announcement = new JObject();
+                announcement["version"] = UpdateService.FormatVersion(update.Version);
+                announcement["releaseName"] = update.ReleaseName ?? String.Empty;
+                announcement["releaseNotes"] = notes;
+                announcement["releaseUrl"] = update.ReleaseUrl ?? String.Empty;
+                announcement["savedUtc"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+                string temporaryPath = path + ".tmp";
+                File.WriteAllText(temporaryPath, announcement.ToString(Formatting.Indented));
+                if (File.Exists(path)) File.Delete(path);
+                File.Move(temporaryPath, path);
+            }
+            catch
+            {
+                // Release notes are optional and must never prevent a verified update.
+            }
+        }
+
         private void ShowUpdatedConfirmation()
         {
             string argument = Environment.GetCommandLineArgs().FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase));
             if (String.IsNullOrEmpty(argument)) return;
             string version = argument.Substring("--updated=".Length).Trim('"');
-            string message = currentLanguage == "pt-BR"
-                ? "Raw Accel Reimagined foi atualizado com sucesso para a versão " + version + ".\n\nSeus perfis e configurações foram preservados."
-                : "Raw Accel Reimagined was updated successfully to version " + version + ".\n\nYour profiles and settings were preserved.";
-            MessageBox.Show(this, message, "Raw Accel Reimagined", MessageBoxButton.OK, MessageBoxImage.Information);
+            string releaseNotes = String.Empty;
+            string releaseUrl = String.Empty;
+            string announcementPath = GetUpdateAnnouncementPath();
+            try
+            {
+                if (File.Exists(announcementPath) && new FileInfo(announcementPath).Length <= 131072)
+                {
+                    JObject announcement = JObject.Parse(File.ReadAllText(announcementPath));
+                    if (String.Equals(announcement.Value<string>("version"), version, StringComparison.OrdinalIgnoreCase))
+                    {
+                        releaseNotes = announcement.Value<string>("releaseNotes") ?? String.Empty;
+                        releaseUrl = announcement.Value<string>("releaseUrl") ?? String.Empty;
+                    }
+                }
+            }
+            catch
+            {
+                releaseNotes = String.Empty;
+                releaseUrl = String.Empty;
+            }
+            finally
+            {
+                try { if (File.Exists(announcementPath)) File.Delete(announcementPath); }
+                catch { }
+            }
+
+            string bundledNotes;
+            string bundledUrl;
+            if (TryLoadBundledReleaseNotes(version, out bundledNotes, out bundledUrl))
+            {
+                releaseNotes = bundledNotes;
+                releaseUrl = bundledUrl;
+            }
+
+            ShowWhatsNew(version, releaseNotes, releaseUrl);
+        }
+
+        private bool TryLoadBundledReleaseNotes(string version, out string releaseNotes, out string releaseUrl)
+        {
+            releaseNotes = String.Empty;
+            releaseUrl = String.Empty;
+            try
+            {
+                string path = IOPath.Combine(rootDirectory, "release-notes.json");
+                if (!File.Exists(path) || new FileInfo(path).Length > 131072) return false;
+                JObject document = JObject.Parse(File.ReadAllText(path));
+                if (!String.Equals(document.Value<string>("version"), version, StringComparison.OrdinalIgnoreCase)) return false;
+                JObject localizedNotes = document["notes"] as JObject;
+                if (localizedNotes == null) return false;
+                JArray selectedNotes = localizedNotes[currentLanguage == "pt-BR" ? "pt-BR" : "en"] as JArray;
+                if (selectedNotes == null || selectedNotes.Count == 0) return false;
+                releaseNotes = String.Join("\n", selectedNotes.Values<string>()
+                    .Where(note => !String.IsNullOrWhiteSpace(note))
+                    .Select(note => "- " + note.Trim()).ToArray());
+                releaseUrl = document.Value<string>("releaseUrl") ?? String.Empty;
+                return !String.IsNullOrWhiteSpace(releaseNotes);
+            }
+            catch
+            {
+                releaseNotes = String.Empty;
+                releaseUrl = String.Empty;
+                return false;
+            }
+        }
+
+        private void ShowWhatsNew(string version, string releaseNotes, string releaseUrl)
+        {
+            whatsNewReleaseUrl = IsTrustedReleaseUrl(releaseUrl) ? releaseUrl : String.Empty;
+            WhatsNewTitle.Text = T("What's New");
+            WhatsNewSubtitle.Text = currentLanguage == "pt-BR"
+                ? "Versão " + version + " instalada com sucesso"
+                : "Version " + version + " installed successfully";
+            WhatsNewVersion.Text = "v" + version;
+            WhatsNewNotes.Text = String.IsNullOrWhiteSpace(releaseNotes)
+                ? T("This update was installed successfully. Open the release details to see the complete list of changes.")
+                : FormatReleaseNotes(releaseNotes);
+            WhatsNewReleaseButton.Visibility = String.IsNullOrEmpty(whatsNewReleaseUrl) ? Visibility.Collapsed : Visibility.Visible;
+            WhatsNewOverlay.Visibility = Visibility.Visible;
+            Activate();
+        }
+
+        private static string FormatReleaseNotes(string releaseNotes)
+        {
+            string text = releaseNotes.Replace("\r\n", "\n").Replace('\r', '\n');
+            text = Regex.Replace(text, @"!\[[^\]]*\]\([^\)]+\)", String.Empty);
+            text = Regex.Replace(text, @"\[([^\]]+)\]\([^\)]+\)", "$1");
+            text = Regex.Replace(text, @"`([^`]+)`", "$1");
+            List<string> lines = new List<string>();
+            foreach (string sourceLine in text.Split('\n'))
+            {
+                string line = sourceLine.TrimEnd();
+                string trimmed = line.TrimStart();
+                if (trimmed.StartsWith("---", StringComparison.Ordinal)) continue;
+                if (trimmed.StartsWith("#", StringComparison.Ordinal))
+                    line = trimmed.TrimStart('#').Trim();
+                else if (trimmed.StartsWith("- ", StringComparison.Ordinal) || trimmed.StartsWith("* ", StringComparison.Ordinal))
+                    line = "• " + trimmed.Substring(2).Trim();
+                else if (trimmed.StartsWith("> ", StringComparison.Ordinal))
+                    line = trimmed.Substring(2).Trim();
+                lines.Add(line);
+            }
+            return String.Join("\n", lines).Trim();
+        }
+
+        private static bool IsTrustedReleaseUrl(string value)
+        {
+            Uri uri;
+            return Uri.TryCreate(value, UriKind.Absolute, out uri) &&
+                String.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(uri.Host, "github.com", StringComparison.OrdinalIgnoreCase) &&
+                uri.AbsolutePath.StartsWith("/diskcell/Raw-Accel-Reimagined/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void CloseWhatsNew_Click(object sender, RoutedEventArgs e)
+        {
+            WhatsNewOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void WhatsNewRelease_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsTrustedReleaseUrl(whatsNewReleaseUrl)) return;
+            Process.Start(new ProcessStartInfo(whatsNewReleaseUrl) { UseShellExecute = true });
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -1216,6 +1411,11 @@ namespace RawAccelModern
             double decay = GetDouble(accel, "decayRate", 1);
             double offset = GetDouble(accel, "inputOffset", 0);
             double limit = GetDouble(accel, "limit", 0);
+            double classicAcceleration = GetDouble(accel, "acceleration", 0.005);
+            double classicExponent = GetDouble(accel, "exponentClassic", 2);
+            JObject cap = accel == null ? null : accel["Cap / Jump"] as JObject;
+            double classicCapInput = GetDouble(cap, "x", 15);
+            double classicCapOutput = GetDouble(cap, "y", 1.5);
             double anisotropy = domain == null ? 1 : GetDouble(domain, "y", 1);
             double verticalRange = range == null ? 1 : GetDouble(range, "y", 1);
 
@@ -1225,6 +1425,11 @@ namespace RawAccelModern
             DecayBox.Text = FormatNumber(decay);
             OffsetBox.Text = FormatNumber(offset);
             LimitBox.Text = FormatNumber(limit);
+            ClassicAccelerationBox.Text = FormatFlexibleNumber(classicAcceleration);
+            ClassicExponentBox.Text = FormatNumber(classicExponent);
+            ClassicOffsetBox.Text = FormatNumber(offset);
+            ClassicCapInputBox.Text = FormatNumber(classicCapInput);
+            ClassicCapOutputBox.Text = FormatNumber(classicCapOutput);
             AnisotropyBox.Text = FormatNumber(anisotropy);
             VerticalRangeBox.Text = FormatNumber(verticalRange);
             SensCurrent.Text = FormatNumber(sens);
@@ -1233,7 +1438,14 @@ namespace RawAccelModern
             DecayCurrent.Text = FormatNumber(decay);
             OffsetCurrent.Text = FormatNumber(offset);
             LimitCurrent.Text = FormatNumber(limit);
+            ClassicAccelerationCurrent.Text = FormatFlexibleNumber(classicAcceleration);
+            ClassicExponentCurrent.Text = FormatNumber(classicExponent);
+            ClassicOffsetCurrent.Text = FormatNumber(offset);
+            ClassicCapInputCurrent.Text = FormatNumber(classicCapInput);
+            ClassicCapOutputCurrent.Text = FormatNumber(classicCapOutput);
             GainToggle.IsChecked = accel != null && accel["Gain / Velocity"] != null && accel["Gain / Velocity"].Value<bool>();
+            ClassicGainToggle.IsChecked = GainToggle.IsChecked;
+            SelectClassicCapMode(accel == null || accel["Cap mode"] == null ? "output" : accel["Cap mode"].ToString());
 
             string mode = accel == null || accel["mode"] == null ? "natural" : accel["mode"].ToString();
             LoadLutWorkingPoints(accel, mode, profile["name"] == null ? null : profile["name"].ToString());
@@ -1242,6 +1454,7 @@ namespace RawAccelModern
             StatRatio.Text = ratio.ToString("0.00", CultureInfo.InvariantCulture);
             StatDpi.Text = displayDpi.ToString(CultureInfo.InvariantCulture);
             UpdateManagedProfileSource();
+            UpdateProfileAssignmentNotice();
             DrawChart();
         }
 
@@ -1268,6 +1481,74 @@ namespace RawAccelModern
             if (DeleteProfileButton != null) DeleteProfileButton.IsEnabled = ReplacementProfileBox.Items.Count > 0;
         }
 
+        private void UpdateProfileAssignmentNotice()
+        {
+            if (ProfileAssignmentNotice == null || ProfileAssignmentStatus == null || settings == null ||
+                ProfileBox == null || ProfileBox.SelectedItem == null) return;
+
+            string selectedProfile = ProfileBox.SelectedItem.ToString();
+            List<Tuple<string, string>> associations = new List<Tuple<string, string>>();
+            JArray devices = settings["devices"] as JArray;
+            if (devices != null)
+            {
+                foreach (JObject device in devices.OfType<JObject>())
+                {
+                    string assignedProfile = device["profile"] == null ? String.Empty : device["profile"].ToString();
+                    if (String.IsNullOrWhiteSpace(assignedProfile)) continue;
+                    string deviceName = device["name"] == null ? String.Empty : device["name"].ToString();
+                    if (String.IsNullOrWhiteSpace(deviceName))
+                        deviceName = device["id"] == null ? "Mouse" : device["id"].ToString();
+                    associations.Add(Tuple.Create(deviceName, assignedProfile));
+                }
+            }
+
+            List<string> controlledDevices = associations
+                .Where(item => String.Equals(item.Item2, selectedProfile, StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.Item1).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (controlledDevices.Count > 0)
+            {
+                ProfileAssignmentStatus.Text = currentLanguage == "pt-BR"
+                    ? "Este perfil controla: " + String.Join(", ", controlledDevices) + "."
+                    : "This profile controls: " + String.Join(", ", controlledDevices) + ".";
+                ProfileAssignmentNotice.BorderBrush = new SolidColorBrush(Color.FromRgb(32, 197, 107));
+                ProfileAssignmentStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
+                return;
+            }
+
+            List<Tuple<string, string>> otherAssociations = associations
+                .Where(item => !String.Equals(item.Item2, selectedProfile, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (otherAssociations.Count == 1)
+            {
+                Tuple<string, string> association = otherAssociations[0];
+                ProfileAssignmentStatus.Text = currentLanguage == "pt-BR"
+                    ? "O mouse \"" + association.Item1 + "\" usa o perfil \"" + association.Item2 + "\". Alterações em \"" + selectedProfile + "\" não terão efeito nele."
+                    : "Mouse \"" + association.Item1 + "\" uses profile \"" + association.Item2 + "\". Changes to \"" + selectedProfile + "\" will not affect it.";
+                ProfileAssignmentNotice.BorderBrush = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+                ProfileAssignmentStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+                return;
+            }
+            if (otherAssociations.Count > 1)
+            {
+                ProfileAssignmentStatus.Text = currentLanguage == "pt-BR"
+                    ? otherAssociations.Count.ToString(CultureInfo.InvariantCulture) + " mouses usam outros perfis. Alterações em \"" + selectedProfile + "\" não terão efeito neles."
+                    : otherAssociations.Count.ToString(CultureInfo.InvariantCulture) + " mice use other profiles. Changes to \"" + selectedProfile + "\" will not affect them.";
+                ProfileAssignmentNotice.BorderBrush = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+                ProfileAssignmentStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+                return;
+            }
+
+            bool isDefaultProfile = ProfileBox.SelectedIndex == 0;
+            ProfileAssignmentStatus.Text = currentLanguage == "pt-BR"
+                ? (isDefaultProfile
+                    ? "Este é o perfil padrão usado por mouses sem uma associação específica."
+                    : "Nenhum mouse está associado a este perfil; suas alterações não afetarão um mouse atribuído a outro perfil.")
+                : (isDefaultProfile
+                    ? "This is the default profile used by mice without a specific association."
+                    : "No mouse is associated with this profile; its changes will not affect a mouse assigned to another profile.");
+            ProfileAssignmentNotice.BorderBrush = new SolidColorBrush(ThemeColor("Accent"));
+            ProfileAssignmentStatus.Foreground = new SolidColorBrush(ThemeColor("AccentHover"));
+        }
+
         private static double GetDouble(JObject obj, string key, double fallback)
         {
             if (obj == null || obj[key] == null) return fallback;
@@ -1286,6 +1567,33 @@ namespace RawAccelModern
         private static string FormatNumber(double value)
         {
             return value.ToString("0.00", CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatFlexibleNumber(double value)
+        {
+            return value.ToString("0.#####", CultureInfo.InvariantCulture);
+        }
+
+        private void SelectClassicCapMode(string mode)
+        {
+            if (ClassicCapModeBox == null) return;
+            for (int index = 0; index < ClassicCapModeBox.Items.Count; index++)
+            {
+                ComboBoxItem item = ClassicCapModeBox.Items[index] as ComboBoxItem;
+                if (item != null && String.Equals(Convert.ToString(item.Tag), mode, StringComparison.OrdinalIgnoreCase))
+                {
+                    ClassicCapModeBox.SelectedIndex = index;
+                    return;
+                }
+            }
+            ClassicCapModeBox.SelectedIndex = 2;
+        }
+
+        private string SelectedClassicCapMode()
+        {
+            ComboBoxItem item = ClassicCapModeBox == null ? null : ClassicCapModeBox.SelectedItem as ComboBoxItem;
+            string value = item == null ? null : Convert.ToString(item.Tag);
+            return String.IsNullOrEmpty(value) ? "output" : value;
         }
 
         private void SelectMode(string mode)
@@ -1320,11 +1628,12 @@ namespace RawAccelModern
 
         private void UpdateCurveEditor()
         {
-            if (CurveParametersCard == null || CurveModeNotice == null || LutEditorCard == null || ModeBox == null) return;
+            if (CurveParametersCard == null || ClassicParametersCard == null || CurveModeNotice == null || LutEditorCard == null || ModeBox == null) return;
             string mode = SelectedMode();
             if (String.Equals(mode, "natural", StringComparison.OrdinalIgnoreCase))
             {
                 CurveParametersCard.Visibility = Visibility.Visible;
+                ClassicParametersCard.Visibility = Visibility.Collapsed;
                 CurveModeNotice.Visibility = Visibility.Collapsed;
                 LutEditorCard.Visibility = Visibility.Collapsed;
                 CurveParameterTitle.Text = T("Natural Curve Parameters");
@@ -1333,7 +1642,18 @@ namespace RawAccelModern
                 return;
             }
 
+            if (String.Equals(mode, "classic", StringComparison.OrdinalIgnoreCase))
+            {
+                CurveParametersCard.Visibility = Visibility.Collapsed;
+                ClassicParametersCard.Visibility = Visibility.Visible;
+                CurveModeNotice.Visibility = Visibility.Collapsed;
+                LutEditorCard.Visibility = Visibility.Collapsed;
+                if (CurveDragHint != null) CurveDragHint.Text = T("Drag Classic handles, then press Save & Apply");
+                return;
+            }
+
             CurveParametersCard.Visibility = Visibility.Collapsed;
+            ClassicParametersCard.Visibility = Visibility.Collapsed;
             LutEditorCard.Visibility = String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
             CurveModeNotice.Visibility = String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase) ? Visibility.Collapsed : Visibility.Visible;
             if (String.Equals(mode, "lut", StringComparison.OrdinalIgnoreCase))
@@ -1370,9 +1690,7 @@ namespace RawAccelModern
                     {
                         double x;
                         double y;
-                        if (Double.TryParse(data[i].ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out x) &&
-                            Double.TryParse(data[i + 1].ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out y) &&
-                            !Double.IsNaN(x) && !Double.IsNaN(y) && x >= 0 && y >= 0)
+                        if (TryReadJsonDouble(data[i], out x) && TryReadJsonDouble(data[i + 1], out y) && x >= 0 && y >= 0)
                             lutWorkingPoints.Add(new Point(x, y));
                     }
                 }
@@ -1381,6 +1699,23 @@ namespace RawAccelModern
                 InitializeIdentityLutPoints();
             NormalizeLutPoints();
             UpdateLutPointsDisplay();
+        }
+
+        private static bool TryReadJsonDouble(JToken token, out double value)
+        {
+            value = 0;
+            if (token == null) return false;
+            try
+            {
+                JValue scalar = token as JValue;
+                object rawValue = scalar == null ? null : scalar.Value;
+                if (rawValue == null) return false;
+                value = Convert.ToDouble(rawValue, CultureInfo.InvariantCulture);
+                return !Double.IsNaN(value) && !Double.IsInfinity(value);
+            }
+            catch (FormatException) { return false; }
+            catch (InvalidCastException) { return false; }
+            catch (OverflowException) { return false; }
         }
 
         private void InitializeIdentityLutPoints()
@@ -1502,7 +1837,15 @@ namespace RawAccelModern
             if (box == null) return;
             double value;
             if (Double.TryParse((box.Text ?? String.Empty).Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out value))
-                box.Text = (box == DeviceDpiBox || box == DevicePollRateBox) ? value.ToString("0", CultureInfo.InvariantCulture) : FormatNumber(value);
+                box.Text = (box == DeviceDpiBox || box == DevicePollRateBox)
+                    ? value.ToString("0", CultureInfo.InvariantCulture)
+                    : (box == ClassicAccelerationBox ? FormatFlexibleNumber(value) : FormatNumber(value));
+            if (IsLoaded && settings != null) DrawChart();
+        }
+
+        private void CurveParameter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!loading && IsLoaded && settings != null) DrawChart();
         }
 
         private void Charts_Click(object sender, RoutedEventArgs e)
@@ -1915,6 +2258,7 @@ namespace RawAccelModern
 
                 settings = JObject.Parse(File.ReadAllText(settingsPath));
                 RefreshConnectedDevices();
+                UpdateProfileAssignmentNotice();
                 SetAdvancedDriverStatus(removeAssociation ? "Device returned to default settings" : "Device profile applied", true);
                 DriverStatus.Text = T("Active");
                 DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
@@ -1924,6 +2268,7 @@ namespace RawAccelModern
                 if (backupPath != null && File.Exists(backupPath)) File.Copy(backupPath, settingsPath, true);
                 settings = JObject.Parse(File.ReadAllText(settingsPath));
                 RefreshConnectedDevices();
+                UpdateProfileAssignmentNotice();
                 SetAdvancedDriverStatus("Device association was not applied", false);
                 MessageBox.Show(this, ex.Message, T("Device Association"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
@@ -2626,6 +2971,29 @@ namespace RawAccelModern
                 accel["inputOffset"] = ReadNumber(OffsetBox, "Input Offset");
                 accel["limit"] = ReadNumber(LimitBox, "Limit");
             }
+            else if (String.Equals(selectedMode, "classic", StringComparison.OrdinalIgnoreCase))
+            {
+                double acceleration = ReadNumber(ClassicAccelerationBox, "Acceleration Rate");
+                double exponent = ReadNumber(ClassicExponentBox, "Classic Exponent");
+                double offset = ReadNumber(ClassicOffsetBox, "Input Offset");
+                double capInput = ReadNumber(ClassicCapInputBox, "Input Cap");
+                double capOutput = ReadNumber(ClassicCapOutputBox, "Output Cap");
+                if (acceleration < 0 || exponent <= 0 || offset < 0 || capInput < 0 || capOutput < 0)
+                    throw new InvalidDataException(T("Classic parameters cannot be negative, and the exponent must be greater than zero."));
+                accel["Gain / Velocity"] = ClassicGainToggle.IsChecked == true;
+                accel["acceleration"] = acceleration;
+                accel["exponentClassic"] = exponent;
+                accel["inputOffset"] = offset;
+                JObject cap = accel["Cap / Jump"] as JObject;
+                if (cap == null)
+                {
+                    cap = new JObject();
+                    accel["Cap / Jump"] = cap;
+                }
+                cap["x"] = capInput;
+                cap["y"] = capOutput;
+                accel["Cap mode"] = SelectedClassicCapMode();
+            }
             else if (String.Equals(selectedMode, "lut", StringComparison.OrdinalIgnoreCase))
             {
                 if (lutWorkingPoints.Count < 2)
@@ -2647,6 +3015,12 @@ namespace RawAccelModern
         {
             try
             {
+                bool applyingLut = String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase);
+                List<Point> appliedLutPoints = applyingLut
+                    ? lutWorkingPoints.Select(point => new Point(point.X, point.Y)).ToList()
+                    : null;
+                int appliedLutSelection = selectedLutPointIndex;
+                int appliedProfileIndex = ProfileBox.SelectedIndex < 0 ? 0 : ProfileBox.SelectedIndex;
                 JObject edited = CreateEditedSettings();
                 Tuple<DriverConfig, string> validation = DriverConfig.Convert(edited.ToString(Formatting.None));
                 if (validation == null || validation.Item1 == null)
@@ -2657,6 +3031,8 @@ namespace RawAccelModern
                 string backupPath = IOPath.Combine(backupDirectory, "settings-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json");
                 File.Copy(settingsPath, backupPath, false);
                 File.WriteAllText(settingsPath, edited.ToString(Formatting.Indented));
+                if (applyingLut)
+                    VerifySavedLutPoints(settingsPath, appliedProfileIndex, appliedLutPoints);
 
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = IOPath.Combine(rootDirectory, "writer.exe");
@@ -2671,6 +3047,17 @@ namespace RawAccelModern
 
                 string selectedName = ProfileBox.SelectedItem == null ? null : ProfileBox.SelectedItem.ToString();
                 LoadSettings(selectedName);
+                if (applyingLut && String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase))
+                {
+                    lutWorkingPoints.Clear();
+                    lutWorkingPoints.AddRange(appliedLutPoints);
+                    selectedLutPointIndex = appliedLutSelection >= 0 && appliedLutSelection < lutWorkingPoints.Count
+                        ? appliedLutSelection
+                        : -1;
+                    activeLutPointIndex = -1;
+                    UpdateLutPointsDisplay();
+                    DrawChart();
+                }
                 DriverStatus.Text = T("Active");
                 DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(32, 197, 107));
             }
@@ -2683,10 +3070,74 @@ namespace RawAccelModern
             }
         }
 
+        private void VerifySavedLutPoints(string path, int profileIndex, IList<Point> expectedPoints)
+        {
+            JObject saved = JObject.Parse(File.ReadAllText(path));
+            JArray profiles = saved["profiles"] as JArray;
+            JObject profile = profiles != null && profileIndex >= 0 && profileIndex < profiles.Count
+                ? profiles[profileIndex] as JObject
+                : null;
+            JObject accel = profile == null ? null : profile["Whole or horizontal accel parameters"] as JObject;
+            JArray data = accel == null ? null : accel["data"] as JArray;
+            if (data == null || data.Count != expectedPoints.Count * 2)
+                throw new InvalidDataException(T("The LUT points could not be persisted correctly."));
+
+            for (int i = 0; i < expectedPoints.Count; i++)
+            {
+                double savedX;
+                double savedY;
+                if (!TryReadJsonDouble(data[i * 2], out savedX) ||
+                    !TryReadJsonDouble(data[i * 2 + 1], out savedY) ||
+                    Math.Abs(savedX - expectedPoints[i].X) > 0.000001 ||
+                    Math.Abs(savedY - expectedPoints[i].Y) > 0.000001)
+                    throw new InvalidDataException(T("The LUT points could not be persisted correctly."));
+            }
+        }
+
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             string selectedName = ProfileBox.SelectedItem == null ? null : ProfileBox.SelectedItem.ToString();
-            LoadSettings(selectedName);
+            string confirmation = currentLanguage == "pt-BR"
+                ? "Restaurar os valores padrão do perfil \"" + selectedName + "\"?\n\nEsta ação altera somente a prévia. O arquivo e o driver só serão modificados se você clicar em Salvar e aplicar."
+                : "Restore the default values for profile \"" + selectedName + "\"?\n\nThis changes only the preview. The file and driver will be modified only if you click Save & Apply.";
+            if (MessageBox.Show(this, confirmation, T("Restore Defaults"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                int index = ProfileBox.SelectedIndex < 0 ? 0 : ProfileBox.SelectedIndex;
+                DriverConfig defaultConfig = DriverConfig.GetDefault();
+                JObject defaultJson = defaultConfig == null ? null : defaultConfig.ToJObject();
+                JArray defaultProfiles = defaultJson == null ? null : defaultJson["profiles"] as JArray;
+                JArray currentProfiles = settings == null ? null : settings["profiles"] as JArray;
+                if (defaultProfiles == null || defaultProfiles.Count == 0 || currentProfiles == null || index >= currentProfiles.Count)
+                    throw new InvalidDataException(T("The original engine rejected the configuration."));
+
+                JObject previewSettings = (JObject)settings.DeepClone();
+                JArray previewProfiles = (JArray)previewSettings["profiles"];
+                JObject defaultProfile = (JObject)defaultProfiles[0].DeepClone();
+                defaultProfile["name"] = selectedName;
+                previewProfiles[index] = defaultProfile;
+
+                JObject savedSettingsReference = settings;
+                try
+                {
+                    settings = previewSettings;
+                    LoadProfile(index);
+                }
+                finally
+                {
+                    settings = savedSettingsReference;
+                }
+                UpdateProfileAssignmentNotice();
+                DriverStatus.Text = T("Pending — press Save & Apply");
+                DriverStatus.Foreground = new SolidColorBrush(Color.FromRgb(255, 188, 82));
+                DrawChart();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, T("Restore Defaults"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void ProfileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -2783,10 +3234,25 @@ namespace RawAccelModern
             }
             else
             {
-                if (!String.Equals(SelectedMode(), "natural", StringComparison.OrdinalIgnoreCase)) return;
                 activeCurveHandle = handleName;
-                curveDragStartValue = handleName == "offset" ? ParseOrDefault(OffsetBox.Text, 0) :
-                    handleName == "decay" ? ParseOrDefault(DecayBox.Text, 1) : ParseOrDefault(LimitBox.Text, 1);
+                if (String.Equals(SelectedMode(), "natural", StringComparison.OrdinalIgnoreCase))
+                {
+                    curveDragStartValue = handleName == "offset" ? ParseOrDefault(OffsetBox.Text, 0) :
+                        handleName == "decay" ? ParseOrDefault(DecayBox.Text, 1) : ParseOrDefault(LimitBox.Text, 1);
+                }
+                else if (String.Equals(SelectedMode(), "classic", StringComparison.OrdinalIgnoreCase) && handleName.StartsWith("classic-", StringComparison.Ordinal))
+                {
+                    curveDragStartValue = handleName == "classic-offset" ? ParseOrDefault(ClassicOffsetBox.Text, 0) :
+                        handleName == "classic-rate" ? ParseOrDefault(ClassicAccelerationBox.Text, 0.005) :
+                        handleName == "classic-exponent" ? ParseOrDefault(ClassicExponentBox.Text, 2) :
+                        ParseOrDefault(ClassicCapInputBox.Text, 15);
+                    curveDragStartSecondaryValue = ParseOrDefault(ClassicCapOutputBox.Text, 1.5);
+                }
+                else
+                {
+                    activeCurveHandle = null;
+                    return;
+                }
             }
             curveDragStart = e.GetPosition(ChartCanvas);
             lastCurveDragRenderTick = Environment.TickCount;
@@ -2863,6 +3329,36 @@ namespace RawAccelModern
                 double responseRange = Math.Max(5, curveDragStartValue * 2.0);
                 double limit = curveDragStartValue - verticalTravel / chartPlotHeight * responseRange;
                 LimitBox.Text = FormatNumber(Math.Max(0, Math.Min(100, limit)));
+            }
+            else if (activeCurveHandle == "classic-offset")
+            {
+                double offset = (position.X - chartPlotLeft) / chartPlotWidth * 40.0;
+                ClassicOffsetBox.Text = FormatNumber(Math.Max(0, Math.Min(40, offset)));
+            }
+            else if (activeCurveHandle == "classic-rate")
+            {
+                double verticalTravel = position.Y - curveDragStart.Y;
+                double responseHeight = Math.Max(80, chartPlotHeight / 3.0);
+                double rate = Math.Max(0.000001, curveDragStartValue) * Math.Exp(-verticalTravel / responseHeight);
+                ClassicAccelerationBox.Text = FormatFlexibleNumber(Math.Max(0.000001, Math.Min(10, rate)));
+            }
+            else if (activeCurveHandle == "classic-exponent")
+            {
+                double verticalTravel = position.Y - curveDragStart.Y;
+                double exponent = curveDragStartValue + verticalTravel / chartPlotHeight * 6.0;
+                ClassicExponentBox.Text = FormatNumber(Math.Max(0.05, Math.Min(10, exponent)));
+            }
+            else if (activeCurveHandle == "classic-cap")
+            {
+                string capMode = SelectedClassicCapMode();
+                double horizontalTravel = position.X - curveDragStart.X;
+                double verticalTravel = position.Y - curveDragStart.Y;
+                double capInput = Math.Max(0.01, Math.Min(40, curveDragStartValue + horizontalTravel / chartPlotWidth * 40.0));
+                double responseHeight = Math.Max(80, chartPlotHeight / 2.0);
+                double capOutput = Math.Max(0.01, curveDragStartSecondaryValue) * Math.Exp(-verticalTravel / responseHeight);
+                capOutput = Math.Max(0.01, Math.Min(100, capOutput));
+                if (!String.Equals(capMode, "output", StringComparison.OrdinalIgnoreCase)) ClassicCapInputBox.Text = FormatNumber(capInput);
+                if (!String.Equals(capMode, "input", StringComparison.OrdinalIgnoreCase)) ClassicCapOutputBox.Text = FormatNumber(capOutput);
             }
 
             DriverStatus.Text = T("Pending — press Save & Apply");
@@ -2954,6 +3450,7 @@ namespace RawAccelModern
             line.StrokeThickness = 3;
             ChartCanvas.Children.Add(line);
             if (String.Equals(SelectedMode(), "natural", StringComparison.OrdinalIgnoreCase)) AddNaturalCurveHandles(values);
+            else if (String.Equals(SelectedMode(), "classic", StringComparison.OrdinalIgnoreCase)) AddClassicCurveHandles(values);
             else if (String.Equals(SelectedMode(), "lut", StringComparison.OrdinalIgnoreCase)) AddLutCurveHandles();
             PositionMouseMarker();
 
@@ -2984,6 +3481,74 @@ namespace RawAccelModern
             AddNaturalCurveHandle("limit", "Curve Limit", 40, CurveValueAtInput(values, 40), "#D87CFF");
         }
 
+        private void AddClassicCurveHandles(List<double> values)
+        {
+            if (values == null || values.Count < 2 || chartPlotWidth <= 0 || chartPlotHeight <= 0) return;
+            double offset = Math.Max(0, Math.Min(40, ParseOrDefault(ClassicOffsetBox.Text, 0)));
+            double remaining = Math.Max(1, 40 - offset);
+            double rateInput = Math.Min(39, offset + Math.Max(2, remaining * 0.28));
+            double exponentInput = Math.Min(39.5, offset + Math.Max(5, remaining * 0.62));
+            double capInput = Math.Max(0.01, Math.Min(40, ParseOrDefault(ClassicCapInputBox.Text, 15)));
+            string capMode = SelectedClassicCapMode();
+            if (String.Equals(capMode, "output", StringComparison.OrdinalIgnoreCase))
+            {
+                double sensitivity = Math.Max(0.0001, ParseOrDefault(SensBox.Text, 1));
+                double target = Math.Max(0.01, ParseOrDefault(ClassicCapOutputBox.Text, 1.5)) * sensitivity;
+                capInput = 40;
+                for (int index = 0; index < values.Count; index++)
+                {
+                    if (values[index] >= target)
+                    {
+                        capInput = 40.0 * index / (values.Count - 1.0);
+                        break;
+                    }
+                }
+            }
+
+            AddClassicCurveHandle("classic-offset", "Classic Start", offset, CurveValueAtInput(values, offset), ClassicOffsetBox.Text, "#FFBC52", Cursors.SizeWE);
+            AddClassicCurveHandle("classic-rate", "Classic Rate", rateInput, CurveValueAtInput(values, rateInput), ClassicAccelerationBox.Text, "#42D6FF", Cursors.SizeNS);
+            AddClassicCurveHandle("classic-exponent", "Classic Shape", exponentInput, CurveValueAtInput(values, exponentInput), ClassicExponentBox.Text, "#A98BFF", Cursors.SizeNS);
+            AddClassicCurveHandle("classic-cap", "Classic Cap", capInput, CurveValueAtInput(values, capInput), ClassicCapInputBox.Text + " / " + ClassicCapOutputBox.Text, "#FF62C0", Cursors.SizeAll);
+        }
+
+        private void AddClassicCurveHandle(string name, string title, double input, double ratio, string value, string color, Cursor cursor)
+        {
+            double x = chartPlotLeft + Math.Max(0, Math.Min(40, input)) / 40.0 * chartPlotWidth;
+            double y = chartPlotTop + chartPlotHeight - (ratio - chartYMin) / (chartYMax - chartYMin) * chartPlotHeight;
+            y = Math.Max(chartPlotTop, Math.Min(chartPlotTop + chartPlotHeight, y));
+            Ellipse handle = new Ellipse
+            {
+                Width = 17,
+                Height = 17,
+                Fill = (SolidColorBrush)new BrushConverter().ConvertFrom(color),
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                Cursor = cursor,
+                Tag = name,
+                ToolTip = T(title) + ": " + value
+            };
+            handle.MouseLeftButtonDown += CurveDragHandle_MouseLeftButtonDown;
+            Panel.SetZIndex(handle, 40);
+            Canvas.SetLeft(handle, x - handle.Width / 2);
+            Canvas.SetTop(handle, y - handle.Height / 2);
+            ChartCanvas.Children.Add(handle);
+
+            TextBlock label = new TextBlock
+            {
+                Text = T(title),
+                Foreground = (SolidColorBrush)new BrushConverter().ConvertFrom(color),
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                IsHitTestVisible = false
+            };
+            label.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+            double labelLeft = name == "classic-cap" ? x - label.DesiredSize.Width - 12 : x + 11;
+            Canvas.SetLeft(label, Math.Max(chartPlotLeft, Math.Min(chartPlotLeft + chartPlotWidth - label.DesiredSize.Width, labelLeft)));
+            Canvas.SetTop(label, Math.Max(chartPlotTop, y - 24));
+            Panel.SetZIndex(label, 39);
+            ChartCanvas.Children.Add(label);
+        }
+
         private void AddLutCurveHandles()
         {
             if (lutWorkingPoints.Count < 2 || chartPlotWidth <= 0 || chartPlotHeight <= 0) return;
@@ -2997,11 +3562,12 @@ namespace RawAccelModern
                 double y = chartPlotTop + chartPlotHeight - (ratio - chartYMin) / (chartYMax - chartYMin) * chartPlotHeight;
                 y = Math.Max(chartPlotTop, Math.Min(chartPlotTop + chartPlotHeight, y));
                 bool selected = i == selectedLutPointIndex;
+                bool finalPoint = i == lutWorkingPoints.Count - 1;
                 Ellipse handle = new Ellipse
                 {
-                    Width = selected ? 19 : 15,
-                    Height = selected ? 19 : 15,
-                    Fill = new SolidColorBrush(selected ? Color.FromRgb(216, 124, 255) : Color.FromRgb(66, 214, 255)),
+                    Width = selected ? 19 : finalPoint ? 17 : 15,
+                    Height = selected ? 19 : finalPoint ? 17 : 15,
+                    Fill = new SolidColorBrush(selected || finalPoint ? Color.FromRgb(216, 124, 255) : Color.FromRgb(66, 214, 255)),
                     Stroke = Brushes.White,
                     StrokeThickness = 2,
                     Cursor = Cursors.SizeAll,
@@ -3013,11 +3579,13 @@ namespace RawAccelModern
                 Canvas.SetLeft(handle, x - handle.Width / 2);
                 Canvas.SetTop(handle, y - handle.Height / 2);
                 ChartCanvas.Children.Add(handle);
-                if (selected)
+                if (selected || finalPoint)
                 {
                     TextBlock label = new TextBlock
                     {
-                        Text = point.X.ToString("0.##", CultureInfo.InvariantCulture) + ", " + point.Y.ToString("0.##", CultureInfo.InvariantCulture),
+                        Text = selected
+                            ? point.X.ToString("0.##", CultureInfo.InvariantCulture) + ", " + point.Y.ToString("0.##", CultureInfo.InvariantCulture)
+                            : T("Final Level"),
                         Foreground = new SolidColorBrush(Color.FromRgb(216, 124, 255)),
                         FontSize = 10,
                         FontWeight = FontWeights.SemiBold,
@@ -3206,11 +3774,6 @@ namespace RawAccelModern
             Canvas.SetLeft(label, left);
             Canvas.SetTop(label, top);
             ChartCanvas.Children.Add(label);
-        }
-
-        private void OpenClassic_Click(object sender, RoutedEventArgs e)
-        {
-            Process.Start(new ProcessStartInfo(IOPath.Combine(rootDirectory, "rawaccel.exe")) { WorkingDirectory = rootDirectory });
         }
 
         private void Themes_Click(object sender, RoutedEventArgs e)

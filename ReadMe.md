@@ -35,6 +35,8 @@ Raw Accel Reimagined preserves the original acceleration engine while providing 
 - Contextual help for configuration options directly inside the application.
 - Windows system tray support and explicit acceleration shutdown when exiting.
 - Built-in, bilingual update checks with verified GitHub Release downloads and settings-safe installation.
+- Silent, themed in-app dialogs instead of Windows notification boxes and sounds.
+- A bilingual What's New pop-up describing the changes after a successful update.
 
 ## Website
 
@@ -45,15 +47,20 @@ Raw Accel Reimagined preserves the original acceleration engine while providing 
 
 Starting with version 1.8.0, Raw Accel Reimagined can check GitHub Releases automatically. When an update is available, the application asks for confirmation, downloads the official Windows package, verifies its SHA-256 checksum, installs it, and reopens itself.
 
+Starting with version 1.8.2, the reopened application displays a bilingual What's New pop-up. The release package contains localized fallback notes, so the changes are shown even when updating from a version that predates this feature or when the network is temporarily unavailable after installation.
+
 `settings.json`, `.config`, `.reimagined.config`, profiles, themes, language preferences, and local device associations are preserved during the update. Automatic checks can be enabled or disabled on the Themes page, where updates can also be checked manually.
 
 Users of versions older than 1.8.0 must install version 1.8.0 manually once. Future published versions can then be installed from inside the application.
 
 ## Run
 
-1. Copy `settings.example.json` to `settings.json` in the project root.
-2. Install the driver with `installer.exe` if it is not installed yet.
-3. Run `RawAccelReimagined.exe`.
+The repository keeps the ready-to-run modern application inside `RawAccelReimagined\` so it is not confused with the legacy `rawaccel.exe` kept at the project root.
+
+1. Open the `RawAccelReimagined` folder.
+2. Copy `settings.example.json` to `settings.json` if the file does not exist yet.
+3. Install the driver with `installer.exe` if it is not installed yet.
+4. Run `RawAccelReimagined.exe`.
 
 Personal settings, local preferences, and hardware identifiers are intentionally excluded from Git to prevent private profiles and device data from being published accidentally.
 
@@ -65,11 +72,11 @@ Requirements: Windows x64, .NET Framework 4.7.2 Developer Pack, and MSBuild.
 MSBuild.exe modern-ui\RawAccelModern.csproj /t:Rebuild /p:Configuration=Release /p:Platform=x64
 ```
 
-The executable is generated at `modern-ui\bin\Release\RawAccelReimagined.exe`.
+The application and updater are generated directly in `RawAccelReimagined\`. Release packages contain only the modern executable and its required runtime files; the legacy `rawaccel.exe` is not included.
 
 ## Upstream and credits
 
-Raw Accel Reimagined is based on the [original Raw Accel project](https://github.com/a1xd/rawaccel), distributed under the MIT License. The original driver, acceleration formulas, license, and contributor credits are preserved. This repository focuses on the redesigned user interface and its additional configuration and management features.
+Raw Accel Reimagined is based on the [original Raw Accel project](https://github.com/RawAccelOfficial/rawaccel), distributed under the MIT License. The original driver, acceleration formulas, license, and contributor credits are preserved. This repository focuses on the redesigned user interface and its additional configuration and management features.
 
 Original Raw Accel contributors include simon (driver and acceleration logic), \_m00se\_ (GUI, gain features, and acceleration types), Sidiouth, TauntyArmordillo, and Kovaak.
 
